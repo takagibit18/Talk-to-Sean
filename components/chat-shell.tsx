@@ -1,13 +1,14 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { MessageCircle, Send, Sparkles, Square } from "lucide-react";
+import { Bot, RotateCcw, Send, Sparkles, Square } from "lucide-react";
+import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 
 const starters = [
-  "What kind of work does Sean do?",
-  "What should I know before contacting Sean?",
-  "Summarize Sean in a few sentences."
+  "请介绍一下 Sean 的项目经验",
+  "Sean 的技术栈是什么？",
+  "如何联系 Sean？"
 ];
 
 export function ChatShell() {
@@ -32,7 +33,7 @@ export function ChatShell() {
           {
             type: "text" as const,
             text:
-              "Hi, I am Sean's AI representative. Ask me about Sean's work, background, projects, collaboration style, or how to get in touch."
+              "你好，我是 Sean 的 AI 助理。你可以问我他的项目经历、技术方向、能力边界和合作方式。"
           }
         ]
       }
@@ -60,21 +61,35 @@ export function ChatShell() {
   }
 
   return (
-    <main className="page">
-      <section className="chat-frame" aria-label="Talk to Sean chatbot">
+    <main className="chat-page">
+      <section className="chat-frame" aria-label="与 Sean 的 AI 助理对话">
         <header className="topbar">
           <div className="brand">
             <div className="brand-mark" aria-hidden="true">
-              <MessageCircle size={20} strokeWidth={2.2} />
+              <Bot size={20} strokeWidth={2.2} />
             </div>
             <div>
-              <h1>Talk to Sean</h1>
-              <p>Public anonymous chat for visitors from Sean's personal homepage.</p>
+              <h1>与 Sean 的 AI 助理对话</h1>
+              <p>公开匿名访问，回答基于 Sean 的 LLM Wiki 资料库。</p>
             </div>
           </div>
-          <div className="status-line" aria-live="polite">
-            <span className="status-dot" aria-hidden="true" />
-            {isBusy ? "Sean AI is replying" : "Ready for a new question"}
+          <div className="chat-header-actions">
+            <Link className="homepage-link" href="/">
+              返回首页
+            </Link>
+            <button
+              className="reset-button"
+              onClick={() => window.location.reload()}
+              title="重新开始"
+              type="button"
+            >
+              <RotateCcw size={17} />
+              重新开始
+            </button>
+            <div className="status-line" aria-live="polite">
+              <span className="status-dot" aria-hidden="true" />
+              {isBusy ? "Sean AI 正在回复" : "可以开始提问"}
+            </div>
           </div>
         </header>
 
@@ -118,28 +133,28 @@ export function ChatShell() {
         <form className="composer" onSubmit={submitMessage}>
           <div className="input-row">
             <textarea
-              aria-label="Message"
+              aria-label="输入你的问题"
               maxLength={1600}
               onChange={(event) => setInput(event.currentTarget.value)}
-              placeholder="Ask Sean something..."
+              placeholder="输入你的问题..."
               rows={2}
               value={input}
             />
             <button
-              aria-label="Send message"
+              aria-label="发送消息"
               className="send-button"
               disabled={!canSend}
-              title="Send message"
+              title="发送消息"
               type="submit"
             >
               <Send size={18} strokeWidth={2.2} />
             </button>
             <button
-              aria-label="Stop response"
+              aria-label="停止回复"
               className="stop-button"
               disabled={!isBusy}
               onClick={() => stop()}
-              title="Stop response"
+              title="停止回复"
               type="button"
             >
               <Square size={16} strokeWidth={2.2} />
@@ -147,13 +162,12 @@ export function ChatShell() {
           </div>
           {error ? (
             <p className="error">
-              The chat service is unavailable right now. Check the API key and model
-              environment variables in Vercel.
+              当前聊天服务不可用，请检查 Vercel 中的 API Key 和模型环境变量。
             </p>
           ) : null}
           <p className="footnote">
-            Public anonymous MVP. Conversations are not stored by this app, and answers
-            are AI-generated from Sean-approved public profile data.
+            公开匿名 MVP。本应用不持久化会话；回答由 AI 基于 Sean 批准的 LLM Wiki
+            资料生成。
           </p>
         </form>
       </section>
