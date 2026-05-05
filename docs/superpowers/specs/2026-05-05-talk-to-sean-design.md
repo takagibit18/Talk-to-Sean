@@ -8,7 +8,9 @@ Create a standalone Vercel-hosted chatbot that visitors can open from Sean's exi
 
 The app uses Next.js App Router. The browser renders a chat interface at `/`. User messages are sent to `/api/chat`, where a server route calls the OpenAI model through the Vercel AI SDK and streams UI message chunks back to the client.
 
-Sean-specific behavior is controlled by a local profile module and a system prompt builder. The model must answer conservatively when profile facts are missing.
+Sean-specific behavior is controlled by a Karpathy LLM Wiki pattern, not RAG and not runtime skills. Sean-approved raw sources are kept immutable under `knowledge/raw/`. Maintained markdown pages under `knowledge/wiki/` compile those sources into stable public facts, projects, voice notes, and boundaries. The app loads a deterministic wiki context bundle into the system prompt.
+
+The model must answer from the compiled wiki and respond conservatively when wiki facts are missing.
 
 ## Components
 
@@ -18,6 +20,9 @@ Sean-specific behavior is controlled by a local profile module and a system prom
 - `lib/sean-profile.ts`: public facts and response constraints.
 - `lib/prompt.ts`: system prompt assembly.
 - `lib/chat-policy.ts`: request-size and shape validation.
+- `knowledge/SCHEMA.md`: wiki maintenance conventions.
+- `knowledge/raw/`: immutable Sean-approved source material.
+- `knowledge/wiki/`: compiled markdown wiki used as chatbot context.
 
 ## Data Flow
 
@@ -25,7 +30,7 @@ Sean-specific behavior is controlled by a local profile module and a system prom
 2. Visitor sends a message in the browser.
 3. `useChat` posts UI messages to `/api/chat`.
 4. The route validates message count, role shape, and total text length.
-5. The route calls the configured OpenAI model with Sean's system prompt and conversation messages.
+5. The route calls the configured OpenAI model with Sean's system prompt, compiled wiki context, and conversation messages.
 6. The response streams back to the UI.
 
 ## Error Handling
@@ -34,7 +39,7 @@ Invalid request payloads return HTTP 400. Provider or API-key failures are conve
 
 ## Version Scope
 
-MVP includes anonymous public chat only. Access codes, login, rate limiting, persistence, analytics, and document retrieval are deferred to MVP+.
+MVP includes anonymous public chat and file-based LLM Wiki context only. Access codes, login, rate limiting, persistence, analytics, embedding-based RAG, vector databases, and runtime skills are out of scope.
 
 ## Deployment
 
@@ -47,4 +52,4 @@ Initial checks:
 - TypeScript typecheck.
 - Next.js production build.
 - Manual chat UI smoke test with environment variables configured.
-- Prompt behavior test by asking for facts absent from `lib/sean-profile.ts`.
+- Prompt behavior test by asking for facts absent from `knowledge/wiki/`.

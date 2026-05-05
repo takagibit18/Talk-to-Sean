@@ -9,6 +9,7 @@ The first version is a standalone Vercel-deployed Next.js app. Sean's existing I
 - Next.js App Router
 - Vercel AI SDK v6
 - OpenAI provider via `@ai-sdk/openai`
+- Karpathy LLM Wiki pattern for Sean-specific knowledge
 - TypeScript
 - Plain CSS for the initial app shell
 
@@ -25,7 +26,10 @@ Set these environment variables locally and in Vercel:
 ```bash
 OPENAI_API_KEY=sk-your-openai-api-key
 OPENAI_MODEL=gpt-5-mini
+OPENAI_BASE_URL=
 ```
+
+For an OpenAI-compatible provider such as DeepSeek, set `OPENAI_MODEL` to the provider model name and `OPENAI_BASE_URL` to its compatible API base URL.
 
 Open `http://localhost:3000`.
 
@@ -47,6 +51,18 @@ https://github.com/takagibit18/Talk-to-Sean
 - Personal homepage links to the Vercel app.
 - Conservative answers when Sean-specific facts have not been added.
 - Visible AI-generated-answer note in the chat UI.
+- No embedding-based RAG, vector database, or runtime skills.
+
+## Knowledge Pattern
+
+This project uses the Karpathy LLM Wiki pattern for simulating Sean's public answer style.
+
+- Raw sources are immutable Sean-approved markdown files.
+- Wiki pages compile those sources into maintained public facts, projects, voice notes, and answer boundaries.
+- The chatbot answers from the compiled wiki context.
+- Missing facts are treated as unknown rather than inferred.
+
+The product runtime does not use RAG, vector retrieval, or skills.
 
 ## MVP Verification
 
@@ -63,7 +79,7 @@ With `OPENAI_API_KEY` configured, run the app locally and ask:
 What university did Sean attend?
 ```
 
-Until that fact is explicitly added to `lib/sean-profile.ts`, the bot should say the current public profile does not include that detail.
+Until that fact is explicitly added to the LLM Wiki, the bot should say the current public wiki does not include that detail.
 
 ## Profile Data
 

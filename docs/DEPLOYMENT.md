@@ -8,7 +8,7 @@ Repository:
 https://github.com/takagibit18/Talk-to-Sean
 ```
 
-Push the `codex/talk-to-sean-mvp` branch or merge it into the default branch before importing into Vercel.
+Push the `codex/talk-to-sean-mvp-plus` branch or merge it into the default branch before importing into Vercel.
 
 ## Vercel
 
@@ -22,6 +22,7 @@ Push the `codex/talk-to-sean-mvp` branch or merge it into the default branch bef
 ```text
 OPENAI_API_KEY=sk-your-openai-api-key
 OPENAI_MODEL=gpt-5-mini
+OPENAI_BASE_URL=
 ```
 
 ## Personal Homepage Link
@@ -42,5 +43,5 @@ Talk to Sean AI
 - `npm run build` passes.
 - Vercel environment variables are configured.
 - A production chat smoke test returns a response.
-- `lib/sean-profile.ts` contains only Sean-approved public facts.
+- `knowledge/raw/` and `knowledge/wiki/` contain only Sean-approved public facts.
 - The domestic personal homepage links out to the Vercel URL rather than embedding it.

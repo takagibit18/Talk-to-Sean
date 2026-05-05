@@ -1,6 +1,6 @@
-import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { validateChatMessages } from "@/lib/chat-policy";
+import { getChatModel } from "@/lib/model-provider";
 import { buildSeanSystemPrompt } from "@/lib/prompt";
 
 export const maxDuration = 30;
@@ -10,10 +10,9 @@ export async function POST(req: Request) {
   try {
     const { messages }: { messages?: unknown } = await req.json();
     const safeMessages = validateChatMessages(messages);
-    const modelName = process.env.OPENAI_MODEL ?? "gpt-5-mini";
 
     const result = streamText({
-      model: openai(modelName),
+      model: getChatModel(),
       system: buildSeanSystemPrompt(),
       messages: await convertToModelMessages(safeMessages as UIMessage[])
     });
