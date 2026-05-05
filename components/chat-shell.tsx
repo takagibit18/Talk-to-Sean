@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { Bot, RotateCcw, Send, Sparkles, Square } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, KeyboardEvent, ReactNode, useMemo, useState } from "react";
 
 const starters = [
   "请介绍一下 Sean 的项目经验",
@@ -40,8 +40,7 @@ export function ChatShell() {
     ];
   }, [messages]);
 
-  function submitMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function sendCurrentMessage() {
     const text = input.trim();
 
     if (!text || isBusy) {
@@ -50,6 +49,24 @@ export function ChatShell() {
 
     sendMessage({ text });
     setInput("");
+  }
+
+  function submitMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    sendCurrentMessage();
+  }
+
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      event.key !== "Enter" ||
+      event.shiftKey ||
+      event.nativeEvent.isComposing
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    sendCurrentMessage();
   }
 
   function sendStarter(text: string) {
@@ -102,9 +119,16 @@ export function ChatShell() {
               <div className="message-label">
                 {message.role === "user" ? "Visitor" : "Sean AI"}
               </div>
-              <div className="bubble">
+              <div
+                className={`bubble ${message.role === "assistant" ? "markdown-preview" : ""}`}
+              >
                 {message.parts.map((part, index) =>
-                  part.type === "text" ? (
+                  part.type === "text" && message.role === "assistant" ? (
+                    <MarkdownPreview
+                      key={`${message.id}-${index}`}
+                      text={part.text}
+                    />
+                  ) : part.type === "text" ? (
                     <span key={`${message.id}-${index}`}>{part.text}</span>
                   ) : null
                 )}
@@ -135,6 +159,7 @@ export function ChatShell() {
             <textarea
               aria-label="输入你的问题"
               maxLength={1600}
+              onKeyDown={handleComposerKeyDown}
               onChange={(event) => setInput(event.currentTarget.value)}
               placeholder="输入你的问题..."
               rows={2}
@@ -172,5 +197,141 @@ export function ChatShell() {
         </form>
       </section>
     </main>
+  );
+}
+
+function MarkdownPreview({ text }: { text: string }) {
+  const blocks = parseMarkdownBlocks(text);
+
+  return (
+    <>
+      {blocks.map((block, index) => {
+        if (block.type === "heading") {
+          const Heading = `h${block.level}` as "h1" | "h2" | "h3";
+
+          return (
+            <Heading key={index}>{renderInlineMarkdown(block.text)}</Heading>
+          );
+        }
+
+        if (block.type === "list") {
+          return (
+            <ul key={index}>
+              {block.items.map((item, itemIndex) => (
+                <li key={itemIndex}>{renderInlineMarkdown(item)}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        return <p key={index}>{renderInlineMarkdown(block.text)}</p>;
+      })}
+    </>
+  );
+}
+
+type MarkdownBlock =
+  | { type: "heading"; level: 1 | 2 | 3; text: string }
+  | { type: "list"; items: string[] }
+  | { type: "paragraph"; text: string };
+
+function parseMarkdownBlocks(text: string): MarkdownBlock[] {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const blocks: MarkdownBlock[] = [];
+  let paragraph: string[] = [];
+  let listItems: string[] = [];
+
+  function flushParagraph() {
+    if (paragraph.length === 0) {
+      return;
+    }
+
+    blocks.push({ type: "paragraph", text: paragraph.join("\n") });
+    paragraph = [];
+  }
+
+  function flushList() {
+    if (listItems.length === 0) {
+      return;
+    }
+
+    blocks.push({ type: "list", items: listItems });
+    listItems = [];
+  }
+
+  for (const line of lines) {
+    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+    const listItem = /^[-*]\s+(.+)$/.exec(line);
+
+    if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push({
+        type: "heading",
+        level: heading[1].length as 1 | 2 | 3,
+        text: heading[2]
+      });
+      continue;
+    }
+
+    if (listItem) {
+      flushParagraph();
+      listItems.push(listItem[1]);
+      continue;
+    }
+
+    if (line.trim() === "") {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    flushList();
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return blocks.length > 0 ? blocks : [{ type: "paragraph", text }];
+}
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={index}>{part.slice(1, -1)}</code>;
+    }
+
+    const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
+
+    if (link && isSafePreviewLink(link[2])) {
+      return (
+        <a href={link[2]} key={index} rel="noreferrer" target="_blank">
+          {link[1]}
+        </a>
+      );
+    }
+
+    return part.split("\n").flatMap((line, lineIndex, lines) => {
+      if (lineIndex === lines.length - 1) {
+        return line;
+      }
+
+      return [line, <br key={`${index}-${lineIndex}`} />];
+    });
+  });
+}
+
+function isSafePreviewLink(href: string) {
+  return (
+    href.startsWith("https://") ||
+    href.startsWith("http://") ||
+    href.startsWith("mailto:")
   );
 }
