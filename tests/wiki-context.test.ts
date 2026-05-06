@@ -21,6 +21,8 @@ describe("wiki context", () => {
     expect(context).toContain("Mergewarden");
     expect(context).toContain("huali6641@gmail.com");
     expect(context).toContain("Sean_Yu3");
+    expect(context).toContain("AI-native developer");
+    expect(context).toContain("standard English documentation");
     expect(context).not.toContain("15061235115");
   });
 });

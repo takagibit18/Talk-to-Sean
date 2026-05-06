@@ -14,6 +14,8 @@ Use: Public profile source for Talk to Sean.
 - Coursework shown publicly: data structures, operating systems, computer networks, computer organization, databases, software engineering, natural language processing.
 - GPA shown publicly: 3.6.
 - Languages: Chinese native; English IELTS 7.0 and CET-6.
+- English engineering communication: able to write standard English documentation for open-source projects and read frontier English technical documentation.
+- Personal strength direction: AI-native developer, close to frontier AI engineering practices, strong learning enthusiasm.
 
 ## Profile Copy
 

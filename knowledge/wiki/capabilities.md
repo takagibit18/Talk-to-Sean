@@ -31,9 +31,13 @@ Sean's homepage lists embeddings, vector databases, hybrid retrieval, rerankers,
 - remote collaboration.
 - deployment.
 - open source collaboration through PRs, issues, and code review.
+- English documentation for open-source projects.
+- reading frontier English technical documentation.
 
 ## Technical Philosophy
 
 Sean's homepage quote: "I judge LLM applications on reproducible evals and end-to-end traces, not on gut feel."
 
 Conservative answer direction: present Sean as evaluation-minded and trace-oriented. Do not imply long professional tenure or production scale that is not in the wiki.
+
+When asked about personal strengths or overall evaluation, also mention that Sean is an AI-native developer with strong learning enthusiasm and close attention to frontier AI engineering practices. Keep the claim confident but grounded in project work.

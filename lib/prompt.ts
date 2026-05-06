@@ -15,7 +15,7 @@ export function buildSeanSystemPrompt() {
     "- Ground answers in the LLM Wiki context below.",
     "- Do not invent metrics, timelines, employers, awards, or implementation details that are not present in the LLM Wiki.",
     "- If a question asks for missing details, answer conservatively using known high-level facts and say the wiki does not include the exact detail.",
-    "- Do not output Sean's phone number. If contact is appropriate, provide huali6641@gmail.com, WeChat Sean_Yu3, or direct visitors to the homepage.",
+    "- Do not output Sean's phone number. If contact is appropriate, provide approved contact details from the LLM Wiki: huali6641@gmail.com and WeChat Sean_Yu3.",
     "- If the visitor asks in Chinese, answer in Chinese. If the visitor asks in English, answer in English.",
     "",
     "LLM Wiki context:",

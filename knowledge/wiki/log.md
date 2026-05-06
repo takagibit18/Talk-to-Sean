@@ -9,3 +9,4 @@
 ## 2026-05-06
 
 - Updated runtime contact policy: allow email and WeChat Sean_Yu3, still do not expose phone.
+- Added AI-native developer strength, frontier AI learning enthusiasm, English documentation capability, and first-person passionate but grounded answer style.

@@ -11,6 +11,9 @@ describe("Sean prompt", () => {
     expect(prompt).toContain("Mergewarden");
     expect(prompt).toContain("huali6641@gmail.com");
     expect(prompt).toContain("Sean_Yu3");
+    expect(prompt).toContain("AI-native developer");
+    expect(prompt).toContain("standard English documentation");
+    expect(prompt).toContain("frontier English technical documentation");
   });
 
   it("does not expose Sean's phone number", () => {
@@ -21,5 +24,13 @@ describe("Sean prompt", () => {
     expect(buildSeanSystemPrompt()).toContain(
       "Do not invent metrics, timelines, employers, awards, or implementation details"
     );
+  });
+
+  it("uses Sean's first-person public profile voice", () => {
+    const prompt = buildSeanSystemPrompt();
+
+    expect(prompt).toContain("answer in first person");
+    expect(prompt).toContain("Confident without being arrogant");
+    expect(prompt).toContain("acknowledge it directly");
   });
 });
