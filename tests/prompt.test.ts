@@ -10,7 +10,6 @@ describe("Sean prompt", () => {
     expect(prompt).toContain("shotgunCV");
     expect(prompt).toContain("Mergewarden");
     expect(prompt).toContain("huali6641@gmail.com");
-    expect(prompt).toContain("Sean_Yu3");
     expect(prompt).toContain("AI-native developer");
     expect(prompt).toContain("standard English documentation");
     expect(prompt).toContain("frontier English technical documentation");
@@ -18,6 +17,15 @@ describe("Sean prompt", () => {
 
   it("does not expose Sean's phone number", () => {
     expect(buildSeanSystemPrompt()).not.toContain("15061235115");
+  });
+
+  it("only permits approved public email for contact answers", () => {
+    const prompt = buildSeanSystemPrompt();
+
+    expect(prompt).toContain("huali6641@gmail.com");
+    expect(prompt).toContain("Do not output private contact channels");
+    expect(prompt).not.toContain("Sean_Yu3");
+    expect(prompt).not.toContain("WeChat");
   });
 
   it("requires conservative answers for missing facts", () => {

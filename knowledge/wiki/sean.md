@@ -1,5 +1,7 @@
 # Sean Yu
 
+Sources: knowledge/raw/homepage.md
+
 Sean Yu is a Computer Science and Technology undergraduate at Minzu University of China, expected to graduate in 2027.
 
 He publicly positions himself as an Agent / LLM Engineer and is open to Agent / LLM roles. His homepage describes him as based in Beijing.
@@ -27,7 +29,6 @@ He publicly positions himself as an Agent / LLM Engineer and is open to Agent / 
 ## Contact
 
 - Email: huali6641@gmail.com.
-- WeChat: Sean_Yu3.
 - GitHub: takagibit18.
 
-Only expose email and WeChat in chatbot answers. Do not expose phone number.
+Only expose email in chatbot contact answers. GitHub may be mentioned as a public profile fact when relevant. Do not expose phone number or private contact channels.

@@ -1,5 +1,7 @@
 # Capabilities
 
+Sources: knowledge/raw/homepage.md
+
 ## Backend and Application Engineering
 
 - Python.

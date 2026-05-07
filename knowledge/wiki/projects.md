@@ -1,5 +1,7 @@
 # Projects
 
+Sources: knowledge/raw/homepage.md
+
 ## shotgunCV
 
 shotgunCV is a pipeline-first AI Resume Ops project for high-volume applications.
