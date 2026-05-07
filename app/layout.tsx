@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope"
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk"
+});
+
 export const metadata: Metadata = {
-  title: "Sean Yu | AI-native Developer",
+  title: "Sean Yu - Agent / LLM Engineer",
   description:
-    "Sean Yu's overseas portfolio with an embedded AI profile assistant for projects, skills, contact, and collaboration fit."
+    "Computer Science undergraduate at Minzu University of China. Python, FastAPI, LLM APIs, agents, RAG, and open source."
 };
 
 export default function RootLayout({
@@ -14,7 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }
