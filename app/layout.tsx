@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Talk to Sean",
-  description: "A public chatbot that answers visitors as Sean's personal AI representative."
+  title: "Sean Yu | AI-native Developer",
+  description:
+    "Sean Yu's overseas portfolio with an embedded AI profile assistant for projects, skills, contact, and collaboration fit."
 };
 
 export default function RootLayout({

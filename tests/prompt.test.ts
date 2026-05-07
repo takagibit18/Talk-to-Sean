@@ -9,23 +9,20 @@ describe("Sean prompt", () => {
     expect(prompt).toContain("Minzu University of China");
     expect(prompt).toContain("shotgunCV");
     expect(prompt).toContain("Mergewarden");
-    expect(prompt).toContain("huali6641@gmail.com");
+    expect(prompt).toContain("Talk to Sean");
     expect(prompt).toContain("AI-native developer");
     expect(prompt).toContain("standard English documentation");
     expect(prompt).toContain("frontier English technical documentation");
   });
 
-  it("does not expose Sean's phone number", () => {
-    expect(buildSeanSystemPrompt()).not.toContain("15061235115");
-  });
-
-  it("only permits approved public email for contact answers", () => {
+  it("permits approved public contact channels and blocks phone numbers", () => {
     const prompt = buildSeanSystemPrompt();
 
     expect(prompt).toContain("huali6641@gmail.com");
-    expect(prompt).toContain("Do not output private contact channels");
-    expect(prompt).not.toContain("Sean_Yu3");
-    expect(prompt).not.toContain("WeChat");
+    expect(prompt).toContain("takagibit18");
+    expect(prompt).toContain("Sean_Yu3");
+    expect(prompt).toContain("Do not output Sean's phone number");
+    expect(prompt).not.toContain("15061235115");
   });
 
   it("requires conservative answers for missing facts", () => {

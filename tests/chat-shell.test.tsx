@@ -27,19 +27,19 @@ describe("chat shell", () => {
   it("sends the current message when Enter is pressed in the composer", () => {
     render(<ChatShell />);
 
-    const textarea = screen.getByLabelText("输入你的问题");
-    fireEvent.change(textarea, { target: { value: "请介绍 Sean" } });
+    const textarea = screen.getByLabelText("Type your question");
+    fireEvent.change(textarea, { target: { value: "Please introduce Sean" } });
     fireEvent.keyDown(textarea, { key: "Enter", code: "Enter" });
 
-    expect(sendMessage).toHaveBeenCalledWith({ text: "请介绍 Sean" });
+    expect(sendMessage).toHaveBeenCalledWith({ text: "Please introduce Sean" });
     expect(textarea).toHaveValue("");
   });
 
   it("keeps Shift+Enter as a newline shortcut without sending", () => {
     render(<ChatShell />);
 
-    const textarea = screen.getByLabelText("输入你的问题");
-    fireEvent.change(textarea, { target: { value: "第一行" } });
+    const textarea = screen.getByLabelText("Type your question");
+    fireEvent.change(textarea, { target: { value: "First line" } });
     fireEvent.keyDown(textarea, {
       key: "Enter",
       code: "Enter",
@@ -47,7 +47,7 @@ describe("chat shell", () => {
     });
 
     expect(sendMessage).not.toHaveBeenCalled();
-    expect(textarea).toHaveValue("第一行");
+    expect(textarea).toHaveValue("First line");
   });
 
   it("renders assistant markdown as preview elements", () => {
@@ -60,7 +60,7 @@ describe("chat shell", () => {
           parts: [
             {
               type: "text",
-              text: "## 项目\n\n- **shotgunCV**\n- `Mergewarden`"
+              text: "## Projects\n\n- **shotgunCV**\n- `Mergewarden`"
             }
           ]
         }
@@ -72,11 +72,18 @@ describe("chat shell", () => {
 
     render(<ChatShell />);
 
-    expect(
-      screen.getByRole("heading", { level: 2, name: "项目" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Projects" })).toBeInTheDocument();
     expect(screen.getByRole("list")).toBeInTheDocument();
     expect(screen.getByText("shotgunCV").tagName).toBe("STRONG");
     expect(screen.getByText("Mergewarden").tagName).toBe("CODE");
+  });
+
+  it("can render as an embedded homepage panel", () => {
+    render(<ChatShell mode="embedded" />);
+
+    expect(screen.getByLabelText("Type your question")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Public anonymous MVP/)
+    ).toBeInTheDocument();
   });
 });
