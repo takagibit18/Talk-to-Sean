@@ -1,8 +1,8 @@
 import type { UIMessage } from "ai";
 
 const allowedRoles = new Set(["system", "user", "assistant"]);
-const maxMessages = 24;
-const maxTextCharacters = 12000;
+const maxMessages = 16;
+const maxTextCharacters = 6000;
 
 export function validateChatMessages(messages: unknown): UIMessage[] {
   if (!Array.isArray(messages)) {

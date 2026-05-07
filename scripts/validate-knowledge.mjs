@@ -55,10 +55,6 @@ for (const page of requiredWikiPages) {
     errors.push(`Missing source reference in knowledge/wiki/${page}`);
   }
 
-  if (/Sean_Yu3|WeChat|微信/i.test(content)) {
-    errors.push(`Unapproved contact detail in knowledge/wiki/${page}`);
-  }
-
   if (/\b1[3-9]\d{9}\b/.test(content)) {
     errors.push(`Possible phone number in knowledge/wiki/${page}`);
   }

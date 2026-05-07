@@ -1,29 +1,45 @@
 import { render, screen } from "@testing-library/react";
 import Home from "@/app/page";
 
-describe("landing page", () => {
-  it("renders the Chinese-first Sean AI landing hero", () => {
+describe("overseas homepage", () => {
+  it("renders a complete overseas personal homepage", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: "和 Sean 的 AI 代理聊聊" })
+      screen.getByRole("heading", { level: 1, name: /Sean Yu/ })
     ).toBeInTheDocument();
-    expect(screen.getByText("Sean · AI 助理")).toBeInTheDocument();
-    expect(screen.getByText("项目经历")).toBeInTheDocument();
-    expect(screen.getByText("技术栈")).toBeInTheDocument();
-    expect(screen.getByText("合作方式")).toBeInTheDocument();
+    expect(screen.getAllByText(/AI-native developer/).length).toBeGreaterThan(0);
+    expect(screen.getByText("about", { selector: "strong" })).toBeInTheDocument();
+    expect(screen.getByText("skills", { selector: "strong" })).toBeInTheDocument();
+    expect(screen.getByText("projects", { selector: "strong" })).toBeInTheDocument();
+    expect(screen.getByText("contact", { selector: "strong" })).toBeInTheDocument();
   });
 
-  it("links primary actions to chat and Sean homepage", () => {
+  it("links primary actions to projects, full chat, and CV", () => {
     render(<Home />);
 
-    expect(screen.getByRole("link", { name: /开始聊天/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Explore Projects/ })).toHaveAttribute(
+      "href",
+      "#projects"
+    );
+    expect(screen.getByRole("link", { name: /Full Chat/ })).toHaveAttribute(
       "href",
       "/chat"
     );
-    expect(screen.getByRole("link", { name: /查看主页/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Download CV/ })).toHaveAttribute(
       "href",
-      "http://seanhomepage.top"
+      "/cv.pdf"
     );
+  });
+
+  it("shows migrated project and public contact facts without phone exposure", () => {
+    render(<Home />);
+
+    expect(screen.getByText("shotgunCV")).toBeInTheDocument();
+    expect(screen.getByText("Mergewarden")).toBeInTheDocument();
+    expect(screen.getByText("huali6641@gmail.com")).toBeInTheDocument();
+    expect(screen.getByText("takagibit18")).toBeInTheDocument();
+    expect(screen.getByText("Sean_Yu3")).toBeInTheDocument();
+    expect(screen.queryByText(/1[3-9]\d{9}/)).not.toBeInTheDocument();
   });
 });

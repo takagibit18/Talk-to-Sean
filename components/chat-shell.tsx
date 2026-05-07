@@ -4,19 +4,19 @@ import { useChat } from "@ai-sdk/react";
 import { Bot, RotateCcw, Send, Sparkles, Square } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, KeyboardEvent, ReactNode, useMemo, useState } from "react";
+import { profileContent } from "@/lib/profile-content";
 
-const starters = [
-  "请介绍一下 Sean 的项目经验",
-  "Sean 的技术栈是什么？",
-  "如何联系 Sean？"
-];
+type ChatShellProps = {
+  mode?: "full" | "embedded";
+};
 
-export function ChatShell() {
+export function ChatShell({ mode = "full" }: ChatShellProps) {
   const [input, setInput] = useState("");
   const { error, messages, sendMessage, status, stop } = useChat({
-    id: "talk-to-sean"
+    id: mode === "embedded" ? "talk-to-sean-embedded" : "talk-to-sean"
   });
 
+  const isEmbedded = mode === "embedded";
   const isBusy = status === "submitted" || status === "streaming";
   const canSend = input.trim().length > 0 && !isBusy;
 
@@ -32,8 +32,7 @@ export function ChatShell() {
         parts: [
           {
             type: "text" as const,
-            text:
-              "你好，我是 Sean 的 AI 助理。你可以问我他的项目经历、技术方向、能力边界和合作方式。"
+            text: profileContent.chat.welcome
           }
         ]
       }
@@ -77,127 +76,133 @@ export function ChatShell() {
     sendMessage({ text });
   }
 
-  return (
-    <main className="chat-page">
-      <section className="chat-frame" aria-label="与 Sean 的 AI 助理对话">
-        <header className="topbar">
-          <div className="brand">
-            <div className="brand-mark" aria-hidden="true">
-              <Bot size={20} strokeWidth={2.2} />
-            </div>
-            <div>
-              <h1>与 Sean 的 AI 助理对话</h1>
-              <p>公开匿名访问，回答基于 Sean 的 LLM Wiki 资料库。</p>
-            </div>
+  const frame = (
+    <section
+      className={`chat-frame ${isEmbedded ? "chat-frame-embedded" : ""}`}
+      aria-label={profileContent.chat.title}
+    >
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-mark" aria-hidden="true">
+            <Bot size={20} strokeWidth={2.2} />
           </div>
-          <div className="chat-header-actions">
-            <Link className="homepage-link" href="/">
-              返回首页
-            </Link>
-            <button
-              className="reset-button"
-              onClick={() => window.location.reload()}
-              title="重新开始"
-              type="button"
-            >
-              <RotateCcw size={17} />
-              重新开始
-            </button>
-            <div className="status-line" aria-live="polite">
-              <span className="status-dot" aria-hidden="true" />
-              {isBusy ? "Sean AI 正在回复" : "可以开始提问"}
-            </div>
+          <div>
+            <h1>{profileContent.chat.title}</h1>
+            <p>{profileContent.chat.subtitle}</p>
           </div>
-        </header>
-
-        <div className="chat-log" aria-live="polite">
-          {renderedMessages.map((message) => (
-            <article
-              className={`message ${message.role === "user" ? "user" : "assistant"}`}
-              key={message.id}
-            >
-              <div className="message-label">
-                {message.role === "user" ? "Visitor" : "Sean AI"}
-              </div>
-              <div
-                className={`bubble ${message.role === "assistant" ? "markdown-preview" : ""}`}
-              >
-                {message.parts.map((part, index) =>
-                  part.type === "text" && message.role === "assistant" ? (
-                    <MarkdownPreview
-                      key={`${message.id}-${index}`}
-                      text={part.text}
-                    />
-                  ) : part.type === "text" ? (
-                    <span key={`${message.id}-${index}`}>{part.text}</span>
-                  ) : null
-                )}
-              </div>
-            </article>
-          ))}
-
-          {messages.length === 0 ? (
-            <div className="starter-row" aria-label="Suggested questions">
-              {starters.map((starter) => (
-                <button
-                  className="starter-button"
-                  disabled={isBusy}
-                  key={starter}
-                  onClick={() => sendStarter(starter)}
-                  type="button"
-                >
-                  <Sparkles size={15} strokeWidth={2.1} />
-                  {starter}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
-
-        <form className="composer" onSubmit={submitMessage}>
-          <div className="input-row">
-            <textarea
-              aria-label="输入你的问题"
-              maxLength={1600}
-              onKeyDown={handleComposerKeyDown}
-              onChange={(event) => setInput(event.currentTarget.value)}
-              placeholder="输入你的问题..."
-              rows={2}
-              value={input}
-            />
-            <button
-              aria-label="发送消息"
-              className="send-button"
-              disabled={!canSend}
-              title="发送消息"
-              type="submit"
-            >
-              <Send size={18} strokeWidth={2.2} />
-            </button>
-            <button
-              aria-label="停止回复"
-              className="stop-button"
-              disabled={!isBusy}
-              onClick={() => stop()}
-              title="停止回复"
-              type="button"
-            >
-              <Square size={16} strokeWidth={2.2} />
-            </button>
+        <div className="chat-header-actions">
+          {!isEmbedded && (
+            <Link className="homepage-link" href="/">
+              Back to homepage
+            </Link>
+          )}
+          <button
+            className="reset-button"
+            onClick={() => window.location.reload()}
+            title="Restart chat"
+            type="button"
+          >
+            <RotateCcw size={17} />
+            Reset
+          </button>
+          <div className="status-line" aria-live="polite">
+            <span className="status-dot" aria-hidden="true" />
+            {isBusy ? "Sean AI is replying" : "Ready for questions"}
           </div>
-          {error ? (
-            <p className="error">
-              当前聊天服务不可用，请检查 Vercel 中的 API Key 和模型环境变量。
-            </p>
-          ) : null}
-          <p className="footnote">
-            公开匿名 MVP。本应用不持久化会话；回答由 AI 基于 Sean 批准的 LLM Wiki
-            资料生成。
+        </div>
+      </header>
+
+      <div className="chat-log" aria-live="polite">
+        {renderedMessages.map((message) => (
+          <article
+            className={`message ${message.role === "user" ? "user" : "assistant"}`}
+            key={message.id}
+          >
+            <div className="message-label">
+              {message.role === "user" ? "Visitor" : "Sean AI"}
+            </div>
+            <div
+              className={`bubble ${message.role === "assistant" ? "markdown-preview" : ""}`}
+            >
+              {message.parts.map((part, index) =>
+                part.type === "text" && message.role === "assistant" ? (
+                  <MarkdownPreview
+                    key={`${message.id}-${index}`}
+                    text={part.text}
+                  />
+                ) : part.type === "text" ? (
+                  <span key={`${message.id}-${index}`}>{part.text}</span>
+                ) : null
+              )}
+            </div>
+          </article>
+        ))}
+
+        {messages.length === 0 ? (
+          <div className="starter-row" aria-label="Suggested questions">
+            {profileContent.chat.starters.map((starter) => (
+              <button
+                className="starter-button"
+                disabled={isBusy}
+                key={starter}
+                onClick={() => sendStarter(starter)}
+                type="button"
+              >
+                <Sparkles size={15} strokeWidth={2.1} />
+                {starter}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <form className="composer" onSubmit={submitMessage}>
+        <div className="input-row">
+          <textarea
+            aria-label="Type your question"
+            maxLength={1200}
+            onKeyDown={handleComposerKeyDown}
+            onChange={(event) => setInput(event.currentTarget.value)}
+            placeholder="Ask about Sean's projects, skills, or collaboration fit..."
+            rows={isEmbedded ? 2 : 3}
+            value={input}
+          />
+          <button
+            aria-label="Send message"
+            className="send-button"
+            disabled={!canSend}
+            title="Send message"
+            type="submit"
+          >
+            <Send size={18} strokeWidth={2.2} />
+          </button>
+          <button
+            aria-label="Stop response"
+            className="stop-button"
+            disabled={!isBusy}
+            onClick={() => stop()}
+            title="Stop response"
+            type="button"
+          >
+            <Square size={16} strokeWidth={2.2} />
+          </button>
+        </div>
+        {error ? (
+          <p className="error">
+            Chat is temporarily unavailable. Check the deployed API key and model environment variables.
           </p>
-        </form>
-      </section>
-    </main>
+        ) : null}
+        <p className="footnote">{profileContent.chat.disclaimer}</p>
+      </form>
+    </section>
   );
+
+  if (isEmbedded) {
+    return frame;
+  }
+
+  return <main className="chat-page">{frame}</main>;
 }
 
 function MarkdownPreview({ text }: { text: string }) {
