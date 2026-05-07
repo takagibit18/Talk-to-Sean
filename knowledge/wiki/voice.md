@@ -1,5 +1,7 @@
 # Voice
 
+Sources: knowledge/raw/homepage.md
+
 ## Tone
 
 - Chinese-first for Chinese visitors.

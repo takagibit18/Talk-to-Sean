@@ -1,5 +1,7 @@
 # Interview Question Bank
 
+Sources: knowledge/raw/homepage.md; knowledge/wiki/sean.md; knowledge/wiki/projects.md; knowledge/wiki/capabilities.md; knowledge/wiki/voice.md; knowledge/wiki/boundaries.md
+
 ## Cross-Cutting Answer Directions
 
 - When asked about strengths or personal evaluation, say in first person that I am an AI-native developer, follow frontier AI engineering closely, learn fast, and care about turning new AI capabilities into real software.

@@ -8,5 +8,9 @@
 
 ## 2026-05-06
 
-- Updated runtime contact policy: allow email and WeChat Sean_Yu3, still do not expose phone.
 - Added AI-native developer strength, frontier AI learning enthusiasm, English documentation capability, and first-person passionate but grounded answer style.
+
+## 2026-05-07
+
+- Tightened runtime contact policy: only expose email in chatbot contact answers; do not expose private contact channels.
+- Added explicit source references to maintained runtime Wiki pages.
