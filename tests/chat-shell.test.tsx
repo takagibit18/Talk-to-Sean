@@ -78,12 +78,12 @@ describe("chat shell", () => {
     expect(screen.getByText("Mergewarden").tagName).toBe("CODE");
   });
 
-  it("can render as an embedded homepage panel", () => {
-    render(<ChatShell mode="embedded" />);
+  it("links the full-screen chat page back to the homepage", () => {
+    render(<ChatShell />);
 
-    expect(screen.getByLabelText("Type your question")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Public anonymous MVP/)
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to homepage" })).toHaveAttribute(
+      "href",
+      "/"
+    );
   });
 });
