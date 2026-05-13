@@ -5,5 +5,6 @@ test("homepage and chat support zh URL locale", async ({ page }) => {
   await page.goto("/?lang=zh");
   await expect(page.locator("html")).toHaveAttribute("lang", "zh");
   await page.goto("/chat?lang=zh");
+  await expect(page.locator("[data-chat-ready='true']")).toBeVisible();
   await expect(page.getByRole("heading", { name: /和 Sean 聊聊/ })).toBeVisible();
 });
