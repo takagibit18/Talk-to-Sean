@@ -121,8 +121,11 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
     }
   }, [shouldAnimateHover]);
 
-  const today = new Date();
-  const startDate = new Date(today);
+  const contributionsSorted = [...contributions].sort((a, b) => a.date.localeCompare(b.date));
+  const latestDate = contributionsSorted.length > 0
+    ? new Date(contributionsSorted[contributionsSorted.length - 1].date + "T12:00:00Z")
+    : new Date();
+  const startDate = new Date(latestDate);
   startDate.setDate(startDate.getDate() - (WEEKS * 7 - 1));
   const dayOfWeek = startDate.getDay();
   const daysUntilMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -170,7 +173,7 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
         viewport={{ once: true, amount: 0.35 }}
         transition={{ duration: 0.95, ease: [0.22, 0.68, 0.2, 1] }}
       >
-        <p className="cv-heading-lg mb-8">{t.total(totalContributions.toLocaleString())}</p>
+        <p className="cv-heading-lg mb-8" suppressHydrationWarning>{t.total(totalContributions.toLocaleString())}</p>
 
         <div className="overflow-x-auto pb-1">
           <div className="relative inline-block w-max">

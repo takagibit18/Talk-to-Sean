@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Star, GitFork, ArrowUpRight, Layers, ListChecks } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import SectionHeader from "@/components/cv/SectionHeader";
@@ -93,7 +94,9 @@ export default function RepoGrid({ repos, locale, data }: RepoGridProps) {
                         </strong>
                       </span>
                       {repo?.updated_at && (
-                        <span className="cv-feature-meta">{formatDate(repo.updated_at, locale, t)}</span>
+                        <span className="cv-feature-meta" suppressHydrationWarning>
+                          {formatDate(repo.updated_at, locale, t)}
+                        </span>
                       )}
                     </div>
 

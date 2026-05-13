@@ -8,8 +8,15 @@ function toTelHref(phone: string) {
   return normalized ? `tel:${normalized}` : "tel:";
 }
 
-export default function Contact({ data }: { data: CVData }) {
+export default function Contact({
+  data,
+  talkToSeanUrl,
+}: {
+  data: CVData;
+  talkToSeanUrl: string | null;
+}) {
   const c = data.contact;
+  const isExternalChat = talkToSeanUrl ? !talkToSeanUrl.startsWith("/") : false;
 
   const Row = ({
     label,
@@ -50,6 +57,14 @@ export default function Contact({ data }: { data: CVData }) {
         {c.phone && <Row label={c.phoneLabel} value={c.phone} href={toTelHref(c.phone)} />}
         {c.email && <Row label={c.emailLabel} value={c.email} href={`mailto:${c.email}`} />}
         {c.site && <Row label={c.siteLabel} value={c.site} href={c.siteHref} external />}
+        {talkToSeanUrl && (
+          <Row
+            label={c.talkToSeanLabel}
+            value={c.talkToSeanValue}
+            href={talkToSeanUrl}
+            external={isExternalChat}
+          />
+        )}
         <div className="cv-contact-link cv-contact-social">
           <div className="min-w-0 flex-1">
             <span className="mb-4 block text-sm font-semibold text-[color:var(--color-text-strong)]">

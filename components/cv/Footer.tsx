@@ -67,7 +67,7 @@ export default function Footer({ data, user }: FooterProps) {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center justify-between gap-4 text-xs text-[color:var(--color-text-muted)]">
-          <span>
+          <span suppressHydrationWarning>
             © {new Date().getFullYear()} {displayName}
           </span>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">

@@ -1,31 +1,60 @@
 import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
+import { cookies, headers } from "next/headers";
+import { localeFromAcceptLanguage, parseLocale } from "@/lib/locale";
 import "./globals.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-manrope"
+  variable: "--font-manrope",
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-space-grotesk"
+  variable: "--font-space-grotesk",
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://takagibit18.github.io"),
   title: "Sean Yu - Agent / LLM Engineer",
   description:
-    "Computer Science undergraduate at Minzu University of China. Python, FastAPI, LLM APIs, agents, RAG, and open source."
+    "Computer Science undergraduate at Minzu University of China. Python, FastAPI, LLM APIs, agents, RAG, and open source.",
+  openGraph: {
+    title: "Sean Yu - Agent / LLM Engineer",
+    description:
+      "Personal homepage and AI profile assistant for Sean Yu, focused on Agent, RAG, and LLM systems.",
+    url: "/",
+    siteName: "Talk to Sean",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Sean Yu" }],
+    type: "profile",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sean Yu - Agent / LLM Engineer",
+    description:
+      "Agent, RAG, and LLM systems portfolio with an AI profile assistant.",
+    images: ["/opengraph-image"],
+  },
 };
 
-export default function RootLayout({
-  children
+export default async function RootLayout({
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const headersList = await headers();
+  const cookieLocale = cookieStore.get("lang")?.value;
+  const lang = cookieLocale
+    ? parseLocale(cookieLocale)
+    : localeFromAcceptLanguage(headersList.get("accept-language"));
+
   return (
-    <html lang="en">
+    <html lang={lang}>
       <body className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}>
+        <a href="#main-content" className="skip-link focus-ring">
+          Skip to content
+        </a>
         {children}
       </body>
     </html>

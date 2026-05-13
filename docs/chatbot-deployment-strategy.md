@@ -1,6 +1,6 @@
 # Chatbot Deployment Strategy
 
-This document records the planned product and deployment split for the personal homepage and the `Talk-to-Sean` chatbot. It is a planning document only; the current homepage can remain a static export until the overseas chatbot service is implemented.
+This document records the planned product and deployment split for the personal homepage and the `Talk-to-Sean` chatbot. The v2 runtime now implements the overseas chatbot service directly in this repo; domestic static hosting can still use a separate static build if needed.
 
 ## Decision
 
@@ -78,7 +78,7 @@ It should not silently become an unlimited proxy.
 
 ## Migration Notes For This Repo
 
-The current homepage uses static export:
+The earlier homepage used static export:
 
 ```ts
 const nextConfig = {
@@ -89,7 +89,7 @@ const nextConfig = {
 };
 ```
 
-This mode is appropriate for the domestic static homepage and for a button that links to a separate chatbot deployment. It is not enough for an embedded chatbot that uses Sean's API key, because a safe owner-provided API requires a server-side runtime.
+This mode is appropriate only for a domestic static homepage and for a button that links to a separate chatbot deployment. It is not enough for the v2 runtime because a safe owner-provided API requires a server-side runtime.
 
 There are two viable implementation paths:
 

@@ -1,72 +1,87 @@
-# Talk to Sean
+<div align="center">
 
-Talk to Sean is the overseas version of Sean Yu's personal homepage: a portfolio page with an embedded public-profile chatbot. The domestic homepage can remain a static ICP filing entry, while this repository owns the Vercel runtime experience for international visitors.
+<!-- Glassmorphism + neon style header -->
+<img src="https://capsule-render.vercel.app/api?type=waving&height=220&color=0:0f0c29,35:1f1b4d,70:302b63,100:0b1020&text=Sean%20Yu&fontColor=79c0ff&fontSize=56&animation=fadeIn&fontAlignY=36&desc=CS%20Student%20%7C%20Agent%20and%20RAG%20Engineer&descAlignY=58&descSize=18" alt="header" />
 
-## Product Shape
+<h1>Sean Yu</h1>
+<p>
+  CS learner focused on LLM apps, agents, RAG, and pragmatic engineering
+</p>
 
-- `/` renders the complete overseas homepage: Hero, embedded chat, About, Skills, Projects, Education, and Contact.
-- `/chat` keeps a full-screen chat route for deeper conversations and mobile use.
-- `/api/chat` calls the model provider from the server, so browser code never receives the model API key.
-- The chatbot answers from the curated `knowledge/wiki` files and should refuse or narrow unrelated requests.
-- Owner-provided API is the default user experience. BYOK is only a future fallback for self-hosting or quota exhaustion.
+</div>
 
-## Architecture
+---
 
-```text
-Visitor browser
-  -> Next.js homepage / chat UI
-  -> POST /api/chat
-  -> chat-policy.ts validation and rate limit
-  -> prompt.ts + wiki-context.ts
-  -> Vercel AI SDK streamText()
-  -> OpenAI-compatible model provider
-```
+## Talk-to-Sean v2 Product Surface
 
-Key choices:
+This repository now serves the runtime version of Sean's personal homepage and AI profile assistant.
 
-- Next.js App Router runs on Vercel runtime, not static export.
-- API keys live in Vercel environment variables.
-- The knowledge base uses a small LLM Wiki instead of RAG because the public profile context is compact and auditable.
-- MVP has no login, database, or persistent chat history.
+- `/` renders Hero, About, Skills, Projects, Activity, Education, Languages, Publications, Contact, and Footer.
+- `/chat` renders the Talk to Sean AI profile assistant.
+- `/api/chat` calls an OpenAI-compatible model provider from the server side.
+- `/api/health` supports deployment smoke checks.
+- `/api/dev/config-check` exposes masked configuration self-checks in development only.
 
-For the broader domestic/overseas deployment decision, see [docs/chatbot-deployment-strategy.md](docs/chatbot-deployment-strategy.md).
+The homepage CTA is explicit: the `Talk to Sean` button routes directly to `/chat`.
 
-## Environment
+---
 
-Create `.env.local` for local development:
+## Tech Stack
 
-```bash
-OPENAI_API_KEY=sk-your-openai-api-key
-OPENAI_MODEL=gpt-5-mini
-OPENAI_BASE_URL=
-```
+<div align="center">
 
-`OPENAI_BASE_URL` is optional. Leave it empty for the default OpenAI-compatible endpoint, or set it when using a compatible provider.
+![Python](https://img.shields.io/badge/Python-111827?style=for-the-badge&logo=python&logoColor=F7DF1E)
+![FastAPI](https://img.shields.io/badge/FastAPI-0F172A?style=for-the-badge&logo=fastapi&logoColor=22D3EE)
+![LangChain](https://img.shields.io/badge/LangChain-0B1220?style=for-the-badge&logo=chainlink&logoColor=93C5FD)
+![LlamaIndex](https://img.shields.io/badge/LlamaIndex-0E1B2E?style=for-the-badge&logo=llama&logoColor=60A5FA)
+![RAG](https://img.shields.io/badge/RAG-Pipeline-10203A?style=for-the-badge&logo=readthedocs&logoColor=38BDF8)
+![Qdrant](https://img.shields.io/badge/Qdrant-111827?style=for-the-badge&logo=qdrant&logoColor=22C55E)
+![Chroma](https://img.shields.io/badge/Chroma-0F1E35?style=for-the-badge&logo=databricks&logoColor=A78BFA)
+![Redis](https://img.shields.io/badge/Redis-09131F?style=for-the-badge&logo=redis&logoColor=EF4444)
+![Docker](https://img.shields.io/badge/Docker-0F1A12?style=for-the-badge&logo=docker&logoColor=60A5FA)
+![OpenAI](https://img.shields.io/badge/OpenAI_API-111827?style=for-the-badge&logo=openai&logoColor=10B981)
+![Claude](https://img.shields.io/badge/Claude_API-1F2937?style=for-the-badge&logo=anthropic&logoColor=F59E0B)
+![Pytest](https://img.shields.io/badge/Pytest-0B1220?style=for-the-badge&logo=pytest&logoColor=FACC15)
 
-## Development
+</div>
 
-```bash
-npm install
-npm run dev
-npm run typecheck
-npm test
-npm run knowledge:check
-npm run build
-```
+---
 
-## Knowledge System
+## Featured Projects
 
-Public facts are maintained in:
+<p align="left">
+  <a href="https://github.com/takagibit18/review-debug-agent">
+    <img width="420" src="https://denvercoder1-github-readme-stats.vercel.app/api/pin/?username=takagibit18&repo=review-debug-agent&theme=react&bg_color=1F222E&title_color=79c0ff&hide_border=true&icon_color=58a6ff&show_icons=true&show_description=true" alt="review-debug-agent" />
+  </a>
+  <a href="https://github.com/takagibit18/shotgunCV">
+    <img width="420" src="https://denvercoder1-github-readme-stats.vercel.app/api/pin/?username=takagibit18&repo=shotgunCV&theme=react&bg_color=1F222E&title_color=79c0ff&hide_border=true&icon_color=58a6ff&show_icons=true&show_description=true" alt="shotgunCV" />
+  </a>
+</p>
 
-- `knowledge/raw/homepage.md`: raw migrated profile source.
-- `knowledge/wiki/*.md`: reviewed runtime context injected into the system prompt.
-- `knowledge/SCHEMA.md`: maintenance rules.
+---
 
-Contact policy for the chatbot:
+## Contribution Graph
 
-- Allowed: `huali6641@gmail.com`, GitHub `takagibit18`, WeChat `Sean_Yu3`.
-- Forbidden: phone number and private contact channels.
+<div align="center">
 
-## Repository
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=takagibit18&theme=github-compact&hide_border=true&area=true&custom_title=Contribution%20Activity" alt="contribution activity graph" />
 
-<https://github.com/takagibit18/Talk-to-Sean>
+</div>
+
+---
+
+## About Me
+
+- I focus on Agent Developer / LLM Application Engineer.
+- I now have hands-on proficiency in Python engineering, production-grade RAG pipelines, and LLM service delivery.
+- Core strengths include hybrid retrieval (BM25 + vector), reranking, context compression, and evaluation-driven optimization with clear metrics.
+- I can build reliable systems with FastAPI, Docker, Redis, structured testing, and cost-aware API orchestration.
+- I have practical experience with Agent design patterns such as ReAct and Plan-and-Execute, and I choose architectures based on task complexity and ROI.
+- I stay actively curious: I learn new tools quickly, validate ideas through rapid prototypes, and turn lessons into reusable engineering patterns.
+- I value disciplined iteration, clear technical documentation, and continuous improvement from feedback.
+
+---
+
+## Architecture Notes
+
+- [Chatbot deployment strategy](docs/chatbot-deployment-strategy.md): domestic static entry, overseas chatbot service, and API ownership plan.

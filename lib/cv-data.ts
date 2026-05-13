@@ -121,6 +121,24 @@ export type CVData = {
     weChat: CVContactWeChat;
     socials: CVSocial[];
   };
+  chat: {
+    title: string;
+    eyebrow: string;
+    ready: string;
+    replying: string;
+    visitor: string;
+    assistant: string;
+    reset: string;
+    backHome: string;
+    welcomeTitle: string;
+    welcomeBody: string;
+    placeholder: string;
+    send: string;
+    characterCount: (remaining: number) => string;
+    shiftEnterTooltip: string;
+    starterPrompts: string[];
+    errors: Record<string, string>;
+  };
   footer: {
     tagline: string;
     author: string;
@@ -268,6 +286,38 @@ export const CV_DATA: Record<Locale, CVData> = {
         { label: "WeChat", text: "Sean_Yu3", kind: "wechat" },
       ],
     },
+    chat: {
+      title: "Talk to Sean",
+      eyebrow: "AI profile assistant",
+      ready: "Ready for questions",
+      replying: "Sean AI is replying",
+      visitor: "Visitor",
+      assistant: "Sean AI",
+      reset: "Reset",
+      backHome: "Back to homepage",
+      welcomeTitle: "Ask about Sean's work",
+      welcomeBody:
+        "This assistant answers from Sean's public profile, projects, and engineering notes.",
+      placeholder: "Ask about Sean's agent, RAG, or backend work...",
+      send: "Send",
+      characterCount: (remaining) => `${remaining} characters left`,
+      shiftEnterTooltip: "Shift+Enter inserts a new line",
+      starterPrompts: [
+        "What kind of LLM systems has Sean built?",
+        "Summarize Sean's strongest engineering skills.",
+        "How should I evaluate Sean for an agent project?",
+      ],
+      errors: {
+        MISSING_API_KEY: "Service not configured yet. Please contact the site owner.",
+        INVALID_BASE_URL: "Model provider is misconfigured.",
+        MODEL_UNAVAILABLE: "AI model is temporarily unavailable.",
+        RATE_LIMITED: "Too many requests. Please wait a moment and try again.",
+        QUOTA_EXHAUSTED: "Today's public quota is used up. Please try again tomorrow.",
+        INVALID_MESSAGE: "Please send a non-empty message under 1200 characters.",
+        PROVIDER_TIMEOUT: "AI is taking too long. Please try again.",
+        default: "Something went wrong. Please try again.",
+      },
+    },
     footer: {
       tagline: "Eval first. Scale second.",
       author: "Sean Yu",
@@ -410,6 +460,37 @@ export const CV_DATA: Record<Locale, CVData> = {
         { label: "GitHub", href: "https://github.com/takagibit18" },
         { label: "微信", text: "Sean_Yu3", kind: "wechat" },
       ],
+    },
+    chat: {
+      title: "和 Sean 聊聊",
+      eyebrow: "AI 个人档案助手",
+      ready: "可以开始提问",
+      replying: "Sean AI 正在回复",
+      visitor: "访客",
+      assistant: "Sean AI",
+      reset: "重置",
+      backHome: "返回主页",
+      welcomeTitle: "了解 Sean 的工作",
+      welcomeBody: "这个助手会基于 Sean 的公开主页、项目和工程笔记回答。",
+      placeholder: "询问 Sean 的 Agent、RAG 或后端工程经历...",
+      send: "发送",
+      characterCount: (remaining) => `还可输入 ${remaining} 个字符`,
+      shiftEnterTooltip: "Shift+Enter 插入换行",
+      starterPrompts: [
+        "Sean 做过哪些 LLM 系统？",
+        "总结 Sean 最强的工程能力。",
+        "如何评估 Sean 是否适合 Agent 项目？",
+      ],
+      errors: {
+        MISSING_API_KEY: "服务暂未配置。请联系站点所有者。",
+        INVALID_BASE_URL: "模型服务配置错误。",
+        MODEL_UNAVAILABLE: "AI 模型暂时不可用。",
+        RATE_LIMITED: "请求过快，请稍后再试。",
+        QUOTA_EXHAUSTED: "今天的公开额度已用完，请明天再试。",
+        INVALID_MESSAGE: "请发送 1200 字以内的非空消息。",
+        PROVIDER_TIMEOUT: "AI 回复时间过长，请重试。",
+        default: "发生错误，请稍后重试。",
+      },
     },
     footer: {
       tagline: "评测先行，再谈规模。",

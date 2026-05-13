@@ -27,6 +27,8 @@ export default function WeChatModalTrigger({
   const [mounted, setMounted] = useState(false);
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "fail">("idle");
   const [showQr, setShowQr] = useState(true);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
 
@@ -38,7 +40,28 @@ export default function WeChatModalTrigger({
     if (!open) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
 
     document.addEventListener("keydown", onKeyDown);
@@ -53,6 +76,7 @@ export default function WeChatModalTrigger({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
       window.cancelAnimationFrame(id);
+      triggerRef.current?.focus();
     };
   }, [open]);
 
@@ -81,6 +105,7 @@ export default function WeChatModalTrigger({
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden />
             <div
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby={titleId}
@@ -141,6 +166,7 @@ export default function WeChatModalTrigger({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         className="focus-ring group inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left"
         onClick={openModal}
