@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
 import { ChatErrorCode } from "@/lib/chat-errors";
@@ -31,9 +31,14 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const remaining = MAX_CHARS - input.length;
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const resizeTextarea = () => {
     const textarea = textareaRef.current;
@@ -113,7 +118,11 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
   const showCharacterCount = remaining <= 200;
 
   return (
-    <main id="main-content" className="cv-container relative min-h-screen py-8 md:py-12">
+    <main
+      id="main-content"
+      data-chat-ready={isHydrated ? "true" : "false"}
+      className="cv-container relative min-h-screen py-8 md:py-12"
+    >
       <div className="page-grain" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">

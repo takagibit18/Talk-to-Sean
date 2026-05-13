@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("chat starter prompt and reset return to the welcome state", async ({ page }) => {
   await page.goto("/chat");
+  await expect(page.locator("[data-chat-ready='true']")).toBeVisible();
   await page.getByRole("button", { name: /strongest engineering skills/i }).click();
   await expect(page.getByLabel(/Ask about Sean/i)).toHaveValue(/strongest engineering skills/i);
   await page.getByRole("button", { name: /Reset/i }).click();
@@ -18,6 +19,7 @@ test("chat renders service configuration errors", async ({ page }) => {
   });
 
   await page.goto("/chat");
+  await expect(page.locator("[data-chat-ready='true']")).toBeVisible();
   await page.getByLabel(/Ask about Sean/i).fill("Hello");
   await page.getByRole("button", { name: /Send/i }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Service not configured" })).toBeVisible();

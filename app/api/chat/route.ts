@@ -61,6 +61,14 @@ function parseChatBody(body: unknown) {
   return parsed.data;
 }
 
+async function readChatBody(request: NextRequest) {
+  try {
+    return await request.json();
+  } catch {
+    throw new ChatError(ChatErrorCode.INVALID_MESSAGE, "Invalid chat request.");
+  }
+}
+
 export function GET() {
   return NextResponse.json(
     {
@@ -88,7 +96,7 @@ export async function POST(request: NextRequest) {
       throw new ChatError(quota.errorCode);
     }
 
-    const body = parseChatBody(await request.json());
+    const body = parseChatBody(await readChatBody(request));
     const config = getModelConfig();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
