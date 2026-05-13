@@ -3,17 +3,18 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, GitBranch, MessageCircle } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import type { CVData } from "@/lib/cv-data";
 
 interface HeroProps {
   data: CVData;
+  talkToSeanUrl: string | null;
 }
 
-export default function Hero({ data }: HeroProps) {
+export default function Hero({ data, talkToSeanUrl }: HeroProps) {
   const reducedMotion = useReducedMotion();
   const EASE = [0.22, 0.68, 0.2, 1] as const;
   const avatarSrc = "/avatar-warm-portrait.png";
+  const isExternalChat = talkToSeanUrl ? !talkToSeanUrl.startsWith("/") : false;
 
   const fadeUp = (delay: number) =>
     reducedMotion
@@ -66,11 +67,18 @@ export default function Hero({ data }: HeroProps) {
                 {data.nav.exploreProjects}
                 <ArrowDown size={14} />
               </a>
-              <Link href="/chat" className="cv-cta cv-cta--cool focus-ring text-sm">
-                <MessageCircle size={15} />
-                {data.hero.talkToSean}
-                <ArrowUpRight size={13} />
-              </Link>
+              {talkToSeanUrl && (
+                <a
+                  href={talkToSeanUrl}
+                  target={isExternalChat ? "_blank" : undefined}
+                  rel={isExternalChat ? "noopener noreferrer" : undefined}
+                  className="cv-cta cv-cta--cool focus-ring text-sm"
+                >
+                  <MessageCircle size={15} />
+                  {data.hero.talkToSean}
+                  <ArrowUpRight size={13} />
+                </a>
+              )}
               <a href="/cv.pdf" className="cv-cta cv-cta--ghost focus-ring text-sm">
                 {data.nav.downloadCv}
               </a>

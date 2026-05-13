@@ -40,7 +40,7 @@ export async function getGitHubUser(): Promise<GitHubUser | null> {
       `https://api.github.com/users/${USERNAME}`,
       {
         headers: getHeaders(),
-        cache: "force-cache",
+        next: { revalidate: 3600 },
       }
     );
     if (!res.ok) return null;
@@ -56,7 +56,7 @@ export async function getGitHubRepos(limit = 6): Promise<GitHubRepo[]> {
       `https://api.github.com/users/${USERNAME}/repos?sort=updated&per_page=${limit}&direction=desc`,
       {
         headers: getHeaders(),
-        cache: "force-cache",
+        next: { revalidate: 3600 },
       }
     );
     if (!res.ok) return [];

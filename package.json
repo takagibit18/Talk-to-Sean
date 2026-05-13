@@ -1,35 +1,44 @@
 {
-  "name": "talk-to-sean",
+  "name": "github-homepage",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "vitest run",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "knowledge:check": "node scripts/validate-knowledge.mjs"
+    "test": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests",
+    "e2e": "playwright test",
+    "knowledge:check": "node scripts/check-knowledge.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/openai": "3.0.60",
-    "@ai-sdk/react": "3.0.177",
-    "@tailwindcss/postcss": "^4.2.4",
-    "ai": "6.0.175",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
+    "@vercel/kv": "^3.0.0",
     "framer-motion": "^12.38.0",
-    "lucide-react": "1.14.0",
-    "next": "16.2.4",
-    "react": "19.2.5",
-    "react-dom": "19.2.5",
-    "tailwindcss": "^4.2.4"
+    "lucide-react": "^0.525.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
-    "typescript": "6.0.3",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.0.0",
     "vitest": "^4.1.5"
   }
 }

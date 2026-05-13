@@ -1,11 +1,21 @@
 import type { NextConfig } from "next";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
+import { validateEnv } from "./lib/config";
 
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  allowedDevOrigins: ["10.80.12.101"],
-  images: {
-    unoptimized: true
-  }
-};
+function buildConfig(phase: string): NextConfig {
+  const isDev = phase === PHASE_DEVELOPMENT_SERVER;
+  const isPreview = process.env.VERCEL_ENV === "preview";
+  const env = validateEnv(process.env, {
+    requireOpenAIKey: !isDev,
+  });
 
-export default nextConfig;
+  return {
+    eslint: { ignoreDuringBuilds: true },
+    images: {
+      unoptimized: true,
+    },
+    allowedDevOrigins: isDev && !isPreview ? env.ALLOWED_DEV_ORIGINS : [],
+  };
+}
+
+export default buildConfig;
