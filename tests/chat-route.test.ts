@@ -15,9 +15,23 @@ function makeRequest(body: unknown) {
   });
 }
 
+function makeProviderStream(chunks: string[]) {
+  const encoder = new TextEncoder();
+
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const chunk of chunks) {
+        controller.enqueue(encoder.encode(chunk));
+      }
+      controller.close();
+    },
+  });
+}
+
 describe("chat route errors", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
     vi.stubEnv("GITHUB_USERNAME", "takagibit18");
     resetMemoryUsageForTests();
     resetRateLimitForTests();
@@ -39,5 +53,48 @@ describe("chat route errors", () => {
 
     expect(response.status).toBe(400);
     expect(body.errorCode).toBe("INVALID_MESSAGE");
+  });
+});
+
+describe("chat route streaming", () => {
+  beforeEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.stubEnv("GITHUB_USERNAME", "takagibit18");
+    vi.stubEnv("OPENAI_API_KEY", "sk-test-key");
+    vi.stubEnv("OPENAI_MODEL", "gpt-test");
+    vi.stubEnv("OPENAI_BASE_URL", "https://api.example.com/v1");
+    resetMemoryUsageForTests();
+    resetRateLimitForTests();
+  });
+
+  it("streams provider deltas as a plain text response", async () => {
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        makeProviderStream([
+          'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n',
+          'data: {"choices":[{"delta":{"content":" world"}}]}\n\n',
+          'data: {"usage":{"prompt_tokens":4,"completion_tokens":2,"total_tokens":6},"choices":[{"delta":{}}]}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", providerFetch);
+
+    const response = await POST(
+      makeRequest({ messages: [{ role: "user", content: "hello" }], locale: "en" }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/plain");
+    await expect(response.text()).resolves.toBe("Hello world");
+    expect(JSON.parse(String(providerFetch.mock.calls[0][1]?.body))).toMatchObject({
+      stream: true,
+      stream_options: { include_usage: true },
+    });
   });
 });

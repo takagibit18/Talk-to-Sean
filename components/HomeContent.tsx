@@ -13,6 +13,8 @@ import Languages from "@/components/cv/Languages";
 import Publications from "@/components/cv/Publications";
 import Contact from "@/components/cv/Contact";
 import Footer from "@/components/cv/Footer";
+import ScrollProgress from "@/components/motion/ScrollProgress";
+import SectionReveal from "@/components/motion/SectionReveal";
 import type { GitHubRepo, GitHubUser } from "@/lib/github";
 import type { ContributionDay } from "@/lib/contributions";
 import type { Locale } from "@/lib/locale";
@@ -47,20 +49,31 @@ export default function HomeContent({
 
   return (
     <>
+      <ScrollProgress />
       <TopBar user={user} data={data} locale={locale} onLocaleChange={handleLocaleChange} />
 
       <div className="page-grain" aria-hidden />
 
       <main id="main-content" className="cv-container relative">
         <Hero data={data} talkToSeanUrl={talkToSeanUrl} />
-        <About data={data} />
+        <SectionReveal>
+          <About data={data} />
+        </SectionReveal>
         <Skills data={data} />
         <RepoGrid repos={repos} locale={locale} data={data} />
         <ContributionHeatmap contributions={contributions} locale={locale} data={data} />
-        <Education data={data} />
-        <Languages data={data} />
-        <Publications data={data} />
-        <Contact data={data} talkToSeanUrl={talkToSeanUrl} />
+        <SectionReveal>
+          <Education data={data} />
+        </SectionReveal>
+        <SectionReveal>
+          <Languages data={data} />
+        </SectionReveal>
+        <SectionReveal>
+          <Publications data={data} />
+        </SectionReveal>
+        <SectionReveal>
+          <Contact data={data} talkToSeanUrl={talkToSeanUrl} />
+        </SectionReveal>
         <Footer data={data} user={user} />
       </main>
     </>

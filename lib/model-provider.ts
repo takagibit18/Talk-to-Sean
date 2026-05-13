@@ -55,6 +55,8 @@ export type ProviderResult = {
   };
 };
 
+export type ProviderStreamComplete = ProviderResult;
+
 export async function createChatCompletion(
   config: ModelConfig,
   messages: ProviderMessage[],
@@ -99,4 +101,105 @@ export async function createChatCompletion(
       totalTokens: body?.usage?.total_tokens,
     },
   };
+}
+
+export async function createChatCompletionStream(
+  config: ModelConfig,
+  messages: ProviderMessage[],
+  signal: AbortSignal,
+  onComplete: (result: ProviderStreamComplete) => Promise<void>,
+  onError?: (error: unknown) => void,
+  onCancel?: () => void,
+): Promise<ReadableStream<Uint8Array>> {
+  const endpoint = new URL("chat/completions", `${config.baseURL.replace(/\/$/, "")}/`);
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages,
+      temperature: 0.3,
+      stream: true,
+      stream_options: { include_usage: true },
+    }),
+    signal,
+  });
+
+  if (response.status === 429) {
+    throw new ChatError(ChatErrorCode.MODEL_UNAVAILABLE);
+  }
+
+  if (!response.ok || !response.body) {
+    throw new ChatError(ChatErrorCode.MODEL_UNAVAILABLE);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = "";
+  let message = "";
+  let usage: ProviderResult["usage"] | undefined;
+
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            await onComplete({ message: message.trim(), usage });
+            controller.close();
+            return;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data:")) {
+              continue;
+            }
+
+            const payload = line.slice(5).trim();
+            if (!payload) {
+              continue;
+            }
+
+            if (payload === "[DONE]") {
+              await onComplete({ message: message.trim(), usage });
+              controller.close();
+              return;
+            }
+
+            const body = JSON.parse(payload);
+            const content = body?.choices?.[0]?.delta?.content;
+            if (typeof content === "string" && content.length > 0) {
+              message += content;
+              controller.enqueue(encoder.encode(content));
+            }
+
+            if (body?.usage) {
+              usage = {
+                promptTokens: body.usage.prompt_tokens,
+                completionTokens: body.usage.completion_tokens,
+                totalTokens: body.usage.total_tokens,
+              };
+            }
+          }
+        }
+      } catch (error) {
+        onError?.(error);
+        controller.error(error);
+      }
+    },
+    cancel() {
+      onCancel?.();
+      void reader.cancel();
+    },
+  });
 }

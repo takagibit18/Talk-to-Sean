@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { cookies, headers } from "next/headers";
 import { localeFromAcceptLanguage, parseLocale } from "@/lib/locale";
+import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -53,12 +54,12 @@ export default async function RootLayout({
       : localeFromAcceptLanguage(headersList.get("accept-language"));
 
   return (
-    <html lang={lang}>
+    <html lang={lang} suppressHydrationWarning>
       <body className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}>
         <a href="#main-content" className="skip-link focus-ring">
           Skip to content
         </a>
-        {children}
+        <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
   );

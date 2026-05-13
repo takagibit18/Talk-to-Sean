@@ -3,7 +3,12 @@ import { z } from "zod";
 import { ChatError, ChatErrorCode, getChatErrorResponse, toChatError } from "@/lib/chat-errors";
 import { checkCostGuard } from "@/lib/cost-guard";
 import { logger } from "@/lib/logger";
-import { createChatCompletion, getModelConfig, type ProviderMessage } from "@/lib/model-provider";
+import {
+  createChatCompletionStream,
+  getModelConfig,
+  type ProviderMessage,
+  type ProviderStreamComplete,
+} from "@/lib/model-provider";
 import { enforceMemoryRateLimit } from "@/lib/rate-limit";
 import { getRequestIp, hashIp } from "@/lib/request";
 import { recordUsage } from "@/lib/usage-tracker";
@@ -100,33 +105,56 @@ export async function POST(request: NextRequest) {
     const config = getModelConfig();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
+    let streamStarted = false;
 
     try {
-      const result = await createChatCompletion(
+      const finalizeStream = async (result: ProviderStreamComplete) => {
+        const usageRecord = await recordUsage({
+          ip,
+          requestId,
+          promptTokens: result.usage?.promptTokens,
+          completionTokens: result.usage?.completionTokens,
+          totalTokens: result.usage?.totalTokens,
+        });
+
+        logger.info(requestId, "chat.request.completed", {
+          ipHash,
+          messageCount: body.messages.length,
+          durationMs: Date.now() - startedAt,
+          promptTokens: usageRecord.promptTokens,
+          completionTokens: usageRecord.completionTokens,
+        });
+
+        clearTimeout(timeout);
+      };
+
+      const stream = await createChatCompletionStream(
         config,
         buildMessages(body.messages, body.locale),
         controller.signal,
+        finalizeStream,
+        (error) => {
+          logger.error(requestId, "chat.request.stream_failed", {
+            ipHash,
+            durationMs: Date.now() - startedAt,
+            stack:
+              process.env.NODE_ENV === "development" && error instanceof Error
+                ? error.stack
+                : undefined,
+          });
+          clearTimeout(timeout);
+        },
+        () => clearTimeout(timeout),
       );
-      const usageRecord = await recordUsage({
-        ip,
-        requestId,
-        promptTokens: result.usage?.promptTokens,
-        completionTokens: result.usage?.completionTokens,
-        totalTokens: result.usage?.totalTokens,
-      });
 
-      logger.info(requestId, "chat.request.completed", {
-        ipHash,
-        messageCount: body.messages.length,
-        durationMs: Date.now() - startedAt,
-        promptTokens: usageRecord.promptTokens,
-        completionTokens: usageRecord.completionTokens,
-      });
+      streamStarted = true;
 
-      return NextResponse.json({
-        message: result.message,
-        requestId,
-        usage: result.usage,
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          "X-Request-Id": requestId,
+        },
       });
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -135,7 +163,9 @@ export async function POST(request: NextRequest) {
 
       throw error;
     } finally {
-      clearTimeout(timeout);
+      if (!streamStarted || controller.signal.aborted) {
+        clearTimeout(timeout);
+      }
     }
   } catch (error) {
     const chatError = toChatError(error);
