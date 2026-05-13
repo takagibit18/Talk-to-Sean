@@ -44,10 +44,13 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const headersList = await headers();
+  const requestLocale = headersList.get("x-talk-locale");
   const cookieLocale = cookieStore.get("lang")?.value;
-  const lang = cookieLocale
-    ? parseLocale(cookieLocale)
-    : localeFromAcceptLanguage(headersList.get("accept-language"));
+  const lang = requestLocale
+    ? parseLocale(requestLocale)
+    : cookieLocale
+      ? parseLocale(cookieLocale)
+      : localeFromAcceptLanguage(headersList.get("accept-language"));
 
   return (
     <html lang={lang}>

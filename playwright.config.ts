@@ -16,6 +16,7 @@ export default defineConfig({
     timeout: 30_000,
     reuseExistingServer: !process.env.CI,
     env: {
+      ALLOWED_DEV_ORIGINS: "http://127.0.0.1:3001,http://localhost:3001",
       OPENAI_API_KEY: "sk-playwright-placeholder",
       GITHUB_USERNAME: "takagibit18",
     },

@@ -20,5 +20,5 @@ test("chat renders service configuration errors", async ({ page }) => {
   await page.goto("/chat");
   await page.getByLabel(/Ask about Sean/i).fill("Hello");
   await page.getByRole("button", { name: /Send/i }).click();
-  await expect(page.getByRole("alert")).toContainText("Service not configured");
+  await expect(page.getByRole("alert").filter({ hasText: "Service not configured" })).toBeVisible();
 });
