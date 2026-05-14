@@ -5,6 +5,22 @@ import { localeFromAcceptLanguage, parseLocale } from "@/lib/locale";
 import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
 
+const themeInitScript = `
+(() => {
+  try {
+    const stored = window.localStorage.getItem("theme");
+    const theme = stored === "light" || stored === "dark" ? stored : "dark";
+    const root = document.documentElement;
+    root.classList.toggle("light", theme === "light");
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
+  } catch {
+    document.documentElement.classList.add("dark");
+    document.documentElement.style.colorScheme = "dark";
+  }
+})();
+`;
+
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
@@ -55,6 +71,9 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}>
         <a href="#main-content" className="skip-link focus-ring">
           Skip to content
