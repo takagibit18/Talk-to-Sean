@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:changed": "vitest run --changed --passWithNoTests",
+    "test": "vitest run --configLoader native --pool threads",
+    "test:changed": "vitest run --configLoader native --pool threads --changed --passWithNoTests",
     "e2e": "playwright test",
     "knowledge:check": "node scripts/check-knowledge.mjs",
     "prepare": "husky"
