@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
+  outputDir: process.env.CI ? "/tmp/playwright-output" : "./test-results",
   expect: {
     timeout: 5_000,
   },
