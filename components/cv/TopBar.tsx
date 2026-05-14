@@ -3,6 +3,7 @@
 import type { CVData } from "@/lib/cv-data";
 import type { Locale } from "@/lib/locale";
 import type { GitHubUser } from "@/lib/github";
+import AnimatedThemeToggler from "@/components/theme/AnimatedThemeToggler";
 
 interface TopBarProps {
   user: GitHubUser | null;
@@ -15,7 +16,7 @@ export default function TopBar({ user, data, locale, onLocaleChange }: TopBarPro
   const displayName = user?.name || user?.login || data.footer.author;
 
   return (
-    <div className="sticky top-0 z-50 border-b border-[color:var(--color-border)] bg-[rgba(17,16,13,0.88)] backdrop-blur">
+    <div className="sticky top-0 z-50 border-b border-[color:var(--color-border)] bg-[color:var(--color-topbar-bg)] backdrop-blur">
       <div className="cv-container flex h-14 items-center justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           <span className="cv-status-dot shrink-0" aria-hidden />
@@ -25,6 +26,8 @@ export default function TopBar({ user, data, locale, onLocaleChange }: TopBarPro
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <AnimatedThemeToggler />
+
           <div className="mr-0 flex shrink-0 items-center gap-0.5 rounded-full border border-[color:var(--color-border)] p-0.5 text-[0.625rem] sm:mr-1 sm:gap-1 sm:text-xs">
             <button
               type="button"

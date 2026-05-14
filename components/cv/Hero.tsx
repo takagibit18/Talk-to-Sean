@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, GitBranch, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { useCursorSpotlight } from "@/components/motion/useCursorSpotlight";
+import TextHoverEffect from "@/components/motion/TextHoverEffect";
 import type { CVData } from "@/lib/cv-data";
 
 interface HeroProps {
@@ -48,7 +49,7 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
                 className="cv-hero-name"
                 aria-label={data.hero.name}
               >
-                {data.hero.name}
+                <TextHoverEffect text={data.hero.name} />
               </motion.h1>
 
               <motion.span
