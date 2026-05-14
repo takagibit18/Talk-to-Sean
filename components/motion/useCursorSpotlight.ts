@@ -59,9 +59,23 @@ export function useCursorSpotlight<T extends HTMLElement>() {
         return;
       }
 
+      rect = host.getBoundingClientRect();
       targetX = event.clientX - rect.left - SPOTLIGHT_RADIUS;
       targetY = event.clientY - rect.top - SPOTLIGHT_RADIUS;
-      spotlight.style.opacity = "1";
+
+      const distLeft = event.clientX - rect.left;
+      const distRight = rect.right - event.clientX;
+      const distTop = event.clientY - rect.top;
+      const distBottom = rect.bottom - event.clientY;
+      const edgeFactor = Math.min(
+        distLeft / SPOTLIGHT_RADIUS,
+        distRight / SPOTLIGHT_RADIUS,
+        distTop / SPOTLIGHT_RADIUS,
+        distBottom / SPOTLIGHT_RADIUS,
+        1.0,
+      );
+
+      spotlight.style.opacity = String(Math.max(0, edgeFactor));
       requestAnimate();
     };
 
