@@ -1,5 +1,5 @@
+import { createElement, type ImgHTMLAttributes } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
 import Skills from "@/components/cv/Skills";
@@ -7,10 +7,9 @@ import TopBar from "@/components/cv/TopBar";
 import { CV_DATA } from "@/lib/cv-data";
 
 vi.mock("next/image", () => ({
-  default: (props: ImgHTMLAttributes<HTMLImageElement>) => {
+  default: (props: ImgHTMLAttributes<HTMLImageElement>) =>
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} alt={props.alt ?? ""} />;
-  },
+    createElement("img", { ...props, alt: props.alt ?? "" }),
 }));
 
 vi.mock("framer-motion", async () => {
