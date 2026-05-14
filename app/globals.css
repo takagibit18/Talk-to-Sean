@@ -606,30 +606,12 @@ body {
     will-change: transform, opacity;
   }
 
-  .cursor-spotlight-host > :not(.cursor-spotlight):not(.hero-ambient-layer) {
+  .cursor-spotlight-host > :not(.cursor-spotlight) {
     position: relative;
     z-index: 1;
   }
 
-  .hero-ambient-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-    opacity: 0.9;
-    mix-blend-mode: screen;
-    will-change: transform;
-    backdrop-filter: blur(0.5px);
-    mask-image: linear-gradient(180deg, transparent 0%, black 12%, black 82%, transparent 100%);
-  }
 
-  .hero-ambient-layer canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    filter: blur(0.2px);
-  }
 
   .heatmap-shimmer {
     position: absolute;

@@ -3,7 +3,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, GitBranch, MessageCircle } from "lucide-react";
 import Image from "next/image";
-import HeroAmbientCanvas from "@/components/motion/HeroAmbientCanvas";
 import { useCursorSpotlight } from "@/components/motion/useCursorSpotlight";
 import type { CVData } from "@/lib/cv-data";
 
@@ -34,7 +33,6 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
       className="cursor-spotlight-host relative overflow-hidden pt-24 pb-20 md:pt-32 md:pb-28"
     >
       <div ref={spotlightRef} className="cursor-spotlight" aria-hidden />
-      <HeroAmbientCanvas />
 
       <div className="relative z-10 flex flex-col gap-8 md:gap-10">
         <div className="grid gap-8 md:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.82fr)] md:items-start md:gap-16">
