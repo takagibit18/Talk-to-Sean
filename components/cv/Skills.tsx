@@ -62,15 +62,15 @@ export default function Skills({ data }: { data: CVData }) {
           viewport={{ once: true, amount: 0.3 }}
           variants={clusterVariants}
         >
-          {data.skills.map((group) => (
-            <motion.div key={group.group} className="cv-skill-cluster" variants={clusterVariants}>
+          {data.skills.map((group, groupIndex) => (
+            <motion.div key={groupIndex} className="cv-skill-cluster" variants={clusterVariants}>
               <div>
                 <strong className="cv-skill-heading">{group.group}</strong>
               </div>
               <motion.div className="flex flex-wrap gap-2.5" variants={clusterVariants}>
-                {group.items.map((item) => (
+                {group.items.map((item, itemIndex) => (
                   <motion.span
-                    key={item}
+                    key={itemIndex}
                     className="cv-chip will-change-transform"
                     variants={reducedMotion ? undefined : chipVariants}
                     whileHover={{
