@@ -2,9 +2,10 @@ import { createElement, type ImgHTMLAttributes } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
-import Skills from "@/components/cv/Skills";
+import Skills, { TECH_STACK_ICONS } from "@/components/cv/Skills";
 import {
   ICON_CLOUD_ROTATION_CONFIG,
+  createIconCloudOrbitPoints,
   getIconCloudPointerDecay,
 } from "@/components/motion/IconCloud";
 import TopBar from "@/components/cv/TopBar";
@@ -64,6 +65,14 @@ describe("homepage visual upgrade", () => {
     ).toBeInTheDocument();
   });
 
+  test("skills icon cloud items render from logo image assets with glyph fallback only", () => {
+    expect(TECH_STACK_ICONS).toHaveLength(12);
+    expect(TECH_STACK_ICONS.every((item) => item.logoSrc?.startsWith("/tech-logos/"))).toBe(
+      true,
+    );
+    expect(TECH_STACK_ICONS.every((item) => item.glyph.length > 0)).toBe(true);
+  });
+
   test("icon cloud uses calm auto-rotation without speeding up on pointer hover", () => {
     const fullYRotationSeconds =
       (Math.PI * 2) / (ICON_CLOUD_ROTATION_CONFIG.autoRotateY * 60);
@@ -83,5 +92,25 @@ describe("homepage visual upgrade", () => {
     expect(getIconCloudPointerDecay(0)).toBe(1);
     expect(getIconCloudPointerDecay(750)).toBeCloseTo(0.125);
     expect(getIconCloudPointerDecay(1500)).toBe(0);
+  });
+
+  test("icon cloud orbit paths are centered great circles through the logo anchor", () => {
+    const anchor = {
+      x: 0.35,
+      y: 0.42,
+      z: Math.sqrt(1 - 0.35 ** 2 - 0.42 ** 2),
+    };
+    const orbit = createIconCloudOrbitPoints(anchor, 16, 0.75);
+
+    expect(orbit).toHaveLength(17);
+    expect(orbit[0].x).toBeCloseTo(anchor.x);
+    expect(orbit[0].y).toBeCloseTo(anchor.y);
+    expect(orbit[0].z).toBeCloseTo(anchor.z);
+    expect(orbit[0].x).toBeCloseTo(orbit.at(-1)?.x ?? Number.NaN);
+    expect(orbit[0].y).toBeCloseTo(orbit.at(-1)?.y ?? Number.NaN);
+    expect(orbit[0].z).toBeCloseTo(orbit.at(-1)?.z ?? Number.NaN);
+    expect(orbit.every((point) => Math.hypot(point.x, point.y, point.z) > 0.999)).toBe(true);
+    expect(orbit.every((point) => Math.hypot(point.x, point.y, point.z) < 1.001)).toBe(true);
+    expect(orbit.some((point) => Math.abs(point.y - anchor.y) > 0.2)).toBe(true);
   });
 });

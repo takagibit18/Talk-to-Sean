@@ -7,6 +7,7 @@ export type IconCloudItem = {
   label: string;
   glyph: string;
   color: string;
+  logoSrc?: string;
 };
 
 type IconCloudProps = {
@@ -32,12 +33,69 @@ export const ICON_CLOUD_ROTATION_CONFIG = {
   pointerLeaveDecayMs: 1500,
 } as const;
 
+export const ICON_CLOUD_ORBIT_CONFIG = {
+  lineWidth: 1.25,
+  backAlpha: 0.13,
+  frontAlpha: 0.32,
+} as const;
+
 export function getIconCloudPointerDecay(
   elapsedMs: number,
   durationMs = ICON_CLOUD_ROTATION_CONFIG.pointerLeaveDecayMs,
 ) {
   const progress = Math.min(Math.max(elapsedMs / durationMs, 0), 1);
   return Math.pow(1 - progress, 3);
+}
+
+export function createIconCloudOrbitPoints(
+  anchorPoint: SpherePoint,
+  segments = 96,
+  planeAngle = 0,
+) {
+  const anchorLength = Math.hypot(anchorPoint.x, anchorPoint.y, anchorPoint.z) || 1;
+  const anchor = {
+    x: anchorPoint.x / anchorLength,
+    y: anchorPoint.y / anchorLength,
+    z: anchorPoint.z / anchorLength,
+  };
+  const reference =
+    Math.abs(anchor.y) < 0.92
+      ? { x: 0, y: 1, z: 0 }
+      : { x: 1, y: 0, z: 0 };
+  const tangentA = normalizePoint(crossPoint(reference, anchor));
+  const tangentB = normalizePoint(crossPoint(anchor, tangentA));
+  const orbitTangent = {
+    x: tangentA.x * Math.cos(planeAngle) + tangentB.x * Math.sin(planeAngle),
+    y: tangentA.y * Math.cos(planeAngle) + tangentB.y * Math.sin(planeAngle),
+    z: tangentA.z * Math.cos(planeAngle) + tangentB.z * Math.sin(planeAngle),
+  };
+
+  return Array.from({ length: segments + 1 }, (_, index): SpherePoint => {
+    const theta = (Math.PI * 2 * index) / segments;
+    return {
+      x: anchor.x * Math.cos(theta) + orbitTangent.x * Math.sin(theta),
+      y: anchor.y * Math.cos(theta) + orbitTangent.y * Math.sin(theta),
+      z: anchor.z * Math.cos(theta) + orbitTangent.z * Math.sin(theta),
+    };
+  });
+}
+
+function crossPoint(a: SpherePoint, b: SpherePoint): SpherePoint {
+  return {
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x,
+  };
+}
+
+function normalizePoint(point: SpherePoint): SpherePoint {
+  const length = Math.hypot(point.x, point.y, point.z) || 1;
+
+  return {
+    x: point.x / length,
+    y: point.y / length,
+    z: point.z / length,
+  };
 }
 
 function clampPointer(value: number) {
@@ -88,6 +146,12 @@ function cssVar(name: string, fallback: string) {
   );
 }
 
+type LogoCacheEntry = {
+  image: HTMLImageElement;
+  loaded: boolean;
+  failed: boolean;
+};
+
 export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reducedMotion = useReducedMotion();
@@ -115,6 +179,7 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
     let width = 320;
     let height = 320;
     let dpr = 1;
+    const logoCache = new Map<string, LogoCacheEntry>();
     const pointer = {
       x: 0,
       y: 0,
@@ -161,17 +226,59 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       draw();
     };
 
-    const project = (
-      point: SpherePoint,
-      index: number,
-      pointerInfluence: { x: number; y: number },
-    ) => {
+    const getLogo = (src: string) => logoCache.get(src);
+
+    const preloadLogos = () => {
+      const uniqueSources = Array.from(
+        new Set(items.map((item) => item.logoSrc).filter(Boolean)),
+      ) as string[];
+
+      uniqueSources.forEach((src) => {
+        if (logoCache.has(src)) {
+          return;
+        }
+
+        const image = new Image();
+        const entry: LogoCacheEntry = {
+          image,
+          loaded: false,
+          failed: false,
+        };
+
+        image.onload = () => {
+          entry.loaded = true;
+          draw();
+        };
+        image.onerror = () => {
+          entry.failed = true;
+          draw();
+        };
+        image.decoding = "async";
+        image.src = src;
+        if (image.complete && image.naturalWidth > 0) {
+          entry.loaded = true;
+          draw();
+        }
+        logoCache.set(src, entry);
+      });
+    };
+
+    const getRotation = (pointerInfluence: { x: number; y: number }) => {
       const rotationY =
         tick * ICON_CLOUD_ROTATION_CONFIG.autoRotateY +
         pointerInfluence.x * ICON_CLOUD_ROTATION_CONFIG.pointerRotateY;
       const rotationX =
         tick * ICON_CLOUD_ROTATION_CONFIG.autoRotateX -
         pointerInfluence.y * ICON_CLOUD_ROTATION_CONFIG.pointerRotateX;
+
+      return { rotationX, rotationY };
+    };
+
+    const projectPoint = (
+      point: SpherePoint,
+      rotation: { rotationX: number; rotationY: number },
+    ) => {
+      const { rotationX, rotationY } = rotation;
       const cosY = Math.cos(rotationY);
       const sinY = Math.sin(rotationY);
       const cosX = Math.cos(rotationX);
@@ -185,12 +292,48 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       const radius = Math.min(width, height) * 0.33;
 
       return {
-        item: items[index],
         x: width / 2 + x1 * radius * scale,
         y: height / 2 + y1 * radius * scale,
         z: z2,
         scale,
       };
+    };
+
+    const project = (
+      point: SpherePoint,
+      index: number,
+      rotation: { rotationX: number; rotationY: number },
+    ) => ({
+      item: items[index],
+      ...projectPoint(point, rotation),
+    });
+
+    const drawOrbit = (
+      point: SpherePoint,
+      rotation: { rotationX: number; rotationY: number },
+      alpha: number,
+      planeAngle: number,
+    ) => {
+      if (!ctx) {
+        return;
+      }
+
+      const orbit = createIconCloudOrbitPoints(point, 96, planeAngle);
+      const projectedOrbit = orbit.map((orbitPoint) => projectPoint(orbitPoint, rotation));
+
+      ctx.beginPath();
+      projectedOrbit.forEach((orbitPoint, index) => {
+        if (index === 0) {
+          ctx.moveTo(orbitPoint.x, orbitPoint.y);
+          return;
+        }
+
+        ctx.lineTo(orbitPoint.x, orbitPoint.y);
+      });
+
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = ICON_CLOUD_ORBIT_CONFIG.lineWidth;
+      ctx.stroke();
     };
 
     function draw(now = performance.now()) {
@@ -200,40 +343,47 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
 
       const bg = cssVar("--color-bg-elevated", "#17140f");
       const border = cssVar("--color-border", "#2f2a22");
-      const text = cssVar("--color-text-strong", "#f4ead8");
-      const muted = cssVar("--color-text-muted", "#a39b8b");
+      const accent = cssVar("--color-accent-strong", "#e1bd68");
+      const cool = cssVar("--color-cool", "#7ec5d6");
       const pointerInfluence = getPointerInfluence(now);
+      const rotation = getRotation(pointerInfluence);
       const cloudItems = points
-        .map((point, index) => project(point, index, pointerInfluence))
+        .map((point, index) => project(point, index, rotation))
         .sort((a, b) => a.z - b.z);
 
       ctx.save();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.clearRect(0, 0, width, height);
 
-      ctx.globalAlpha = 0.34;
-      ctx.strokeStyle = border;
-      ctx.lineWidth = 1;
-      for (let ring = 0; ring < 3; ring += 1) {
-        ctx.beginPath();
-        ctx.ellipse(
-          width / 2,
-          height / 2,
-          width * (0.29 + ring * 0.055),
-          height * (0.18 + ring * 0.035),
-          ring * 0.72,
-          0,
-          Math.PI * 2,
+      points.forEach((point, index) => {
+        const projected = projectPoint(point, rotation);
+        const depth = (projected.z + 1) / 2;
+        const depthAlpha =
+          ICON_CLOUD_ORBIT_CONFIG.backAlpha +
+          depth * (ICON_CLOUD_ORBIT_CONFIG.frontAlpha - ICON_CLOUD_ORBIT_CONFIG.backAlpha);
+        ctx.strokeStyle = index % 3 === 0 ? accent : index % 3 === 1 ? cool : border;
+        drawOrbit(
+          point,
+          rotation,
+          index % 2 === 0 ? depthAlpha : depthAlpha * 0.72,
+          index * 0.73,
         );
-        ctx.stroke();
-      }
+      });
 
       cloudItems.forEach(({ item, x, y, z, scale }) => {
-        const isFront = z > 0.15;
+        const logo = item.logoSrc ? getLogo(item.logoSrc) : undefined;
+        const logoAspect =
+          logo?.loaded && logo.image.naturalHeight > 0
+            ? logo.image.naturalWidth / logo.image.naturalHeight
+            : 1;
+        const hasLogo = Boolean(logo?.loaded && !logo.failed);
         const size = Math.max(30, Math.min(48, 26 * scale));
         const alpha = 0.48 + ((z + 1) / 2) * 0.5;
-        const labelWidth = isFront && width > 315 ? ctx.measureText(item.label).width + 46 : size;
-        const chipWidth = Math.min(132, Math.max(size, labelWidth));
+        const chipWidth = hasLogo
+          ? Math.min(96, Math.max(size, size * Math.min(logoAspect, 1.95) * 0.92))
+          : size;
         const chipHeight = size;
         const chipX = x - chipWidth / 2;
         const chipY = y - chipHeight / 2;
@@ -248,32 +398,47 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
         ctx.lineWidth = 1.25;
         ctx.stroke();
 
+        if (hasLogo && logo) {
+          const plateSize = chipHeight * 0.76;
+          const plateX = x - plateSize / 2;
+          const plateY = y - plateSize / 2;
+          ctx.globalAlpha = alpha * 0.92;
+          ctx.fillStyle = "rgba(255, 250, 242, 0.92)";
+          roundedRect(ctx, plateX, plateY, plateSize, plateSize, plateSize * 0.28);
+          ctx.fill();
+
+          const logoMaxWidth = chipWidth * 0.72;
+          const logoMaxHeight = chipHeight * 0.68;
+          const logoScale = Math.min(
+            logoMaxWidth / logo.image.naturalWidth,
+            logoMaxHeight / logo.image.naturalHeight,
+          );
+          const logoWidth = logo.image.naturalWidth * logoScale;
+          const logoHeight = logo.image.naturalHeight * logoScale;
+
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(
+            logo.image,
+            x - logoWidth / 2,
+            y - logoHeight / 2,
+            logoWidth,
+            logoHeight,
+          );
+          return;
+        }
+
         ctx.globalAlpha = alpha;
         ctx.fillStyle = item.color;
         ctx.beginPath();
-        ctx.arc(chipX + chipHeight / 2, y, chipHeight * 0.34, 0, Math.PI * 2);
+        ctx.arc(x, y, chipHeight * 0.34, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = "#ffffff";
         ctx.font = `700 ${Math.max(9, chipHeight * 0.3)}px var(--font-space-grotesk), sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(item.glyph, chipX + chipHeight / 2, y + 0.5);
-
-        if (isFront && width > 315) {
-          ctx.fillStyle = text;
-          ctx.font = `600 ${Math.max(10, chipHeight * 0.28)}px var(--font-manrope), sans-serif`;
-          ctx.textAlign = "left";
-          ctx.fillText(item.label, chipX + chipHeight * 0.88, y + 0.5);
-        }
+        ctx.fillText(item.glyph, x, y + 0.5);
       });
-
-      ctx.globalAlpha = 0.72;
-      ctx.fillStyle = muted;
-      ctx.font = "600 11px var(--font-manrope), sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("agent stack", width / 2, height / 2);
 
       ctx.restore();
     }
@@ -319,11 +484,16 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resize);
     observer?.observe(canvas);
 
+    preloadLogos();
     resize();
     animate();
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
+      logoCache.forEach(({ image }) => {
+        image.onload = null;
+        image.onerror = null;
+      });
       observer?.disconnect();
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("pointermove", handlePointerMove);
