@@ -11,12 +11,28 @@ Talk-to-Sean v2 runs as a Next.js app with server-side API routes. Do not deploy
 | `OPENAI_MODEL` | No | Chat model name. Defaults to `gpt-5-mini`. |
 | `OPENAI_BASE_URL` | No | OpenAI-compatible base URL. Defaults to `https://api.openai.com/v1`. |
 | `GITHUB_PAT` | No | Raises GitHub API limits and reduces unauthenticated API failures. |
-| `DAILY_REQUEST_LIMIT` | No | Owner-side public daily request cap. Defaults to `100`. |
-| `DAILY_IP_LIMIT` | No | Per-IP daily cap. Defaults to `20`. |
+| `UPSTASH_REDIS_REST_URL` | Production chat: Yes | Persistent Redis REST URL for public quota enforcement. Production `/api/chat` fails closed without it. |
+| `UPSTASH_REDIS_REST_TOKEN` | Production chat: Yes | Persistent Redis REST token for public quota enforcement. Production `/api/chat` fails closed without it. |
+| `DAILY_REQUEST_LIMIT` | No | Owner-side public daily request cap. Defaults to `50`. |
+| `DAILY_IP_LIMIT` | No | Per-IP daily cap. Defaults to `8`. |
+| `DAILY_SESSION_LIMIT` | No | Anonymous browser-session daily cap. Defaults to `8`. |
+| `CHAT_ALLOWED_ORIGINS` | No | Comma-separated extra browser origins allowed to POST to `/api/chat`. The deployed request origin is always allowed. |
 
 ## Preview Protection
 
 Use an isolated low-cost preview API key and model for Vercel Preview environments. Preview deploys are easy to share and can consume production quota if they reuse the same key. Keep production keys only in the Production environment, set lower `DAILY_REQUEST_LIMIT` and `DAILY_IP_LIMIT` for Preview, and consider a cheaper OpenAI-compatible provider there.
+
+## Public Chat Protection
+
+Production `/api/chat` is intentionally fail-closed unless Upstash Redis is configured. In-memory counters are acceptable for local development and tests, but they are not reliable protection on Vercel because serverless instances can cold-start or scale horizontally. Configure an Upstash Redis integration before enabling `OPENAI_API_KEY` for production chat.
+
+The chat endpoint enforces three quota layers:
+
+- short-window in-memory burst limit per IP hash;
+- persistent daily total and per-IP limits in Redis;
+- persistent anonymous session limits via an HttpOnly `tts_session` cookie.
+
+Browser POST requests with a foreign `Origin` are rejected. Set `CHAT_ALLOWED_ORIGINS` only when another trusted frontend domain needs to call this deployment directly.
 
 ## Allowed Dev Origins
 

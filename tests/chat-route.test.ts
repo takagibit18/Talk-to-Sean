@@ -15,6 +15,18 @@ function makeRequest(body: unknown) {
   });
 }
 
+function makeRequestWithOrigin(body: unknown, origin: string) {
+  return new NextRequest("https://talk-to-sean.vercel.app/api/chat", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "origin": origin,
+      "x-forwarded-for": "203.0.113.9",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 function makeProviderStream(chunks: string[]) {
   const encoder = new TextEncoder();
 
@@ -53,6 +65,21 @@ describe("chat route errors", () => {
 
     expect(response.status).toBe(400);
     expect(body.errorCode).toBe("INVALID_MESSAGE");
+  });
+
+  it("rejects cross-site browser posts before provider access", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test-key");
+
+    const response = await POST(
+      makeRequestWithOrigin(
+        { messages: [{ role: "user", content: "hello" }] },
+        "https://attacker.example",
+      ),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.errorCode).toBe("FORBIDDEN_ORIGIN");
   });
 });
 
@@ -96,5 +123,6 @@ describe("chat route streaming", () => {
       stream: true,
       stream_options: { include_usage: true },
     });
+    expect(response.headers.get("set-cookie")).toContain("tts_session=");
   });
 });

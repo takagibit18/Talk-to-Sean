@@ -4,6 +4,8 @@ export enum ChatErrorCode {
   MODEL_UNAVAILABLE = "MODEL_UNAVAILABLE",
   RATE_LIMITED = "RATE_LIMITED",
   QUOTA_EXHAUSTED = "QUOTA_EXHAUSTED",
+  PROTECTION_MISCONFIGURED = "PROTECTION_MISCONFIGURED",
+  FORBIDDEN_ORIGIN = "FORBIDDEN_ORIGIN",
   INVALID_MESSAGE = "INVALID_MESSAGE",
   PROVIDER_TIMEOUT = "PROVIDER_TIMEOUT",
 }
@@ -34,6 +36,14 @@ const ERROR_META: Record<
   [ChatErrorCode.QUOTA_EXHAUSTED]: {
     status: 429,
     message: "Today's public quota is used up. Please try again tomorrow.",
+  },
+  [ChatErrorCode.PROTECTION_MISCONFIGURED]: {
+    status: 503,
+    message: "Public chat protection is not configured yet.",
+  },
+  [ChatErrorCode.FORBIDDEN_ORIGIN]: {
+    status: 403,
+    message: "This chat request is not allowed from that origin.",
   },
   [ChatErrorCode.INVALID_MESSAGE]: {
     status: 400,

@@ -32,13 +32,26 @@ const EnvSchemaBase = z.object({
       .map((origin) => origin.trim())
       .filter(Boolean),
   ),
+  CHAT_ALLOWED_ORIGINS: z.preprocess(
+    blankToUndefined,
+    z.string().default(""),
+  ).transform((value) =>
+    value
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ),
   DAILY_REQUEST_LIMIT: z.preprocess(
     blankToUndefined,
-    z.coerce.number().int().positive().default(100),
+    z.coerce.number().int().positive().default(50),
   ),
   DAILY_IP_LIMIT: z.preprocess(
     blankToUndefined,
-    z.coerce.number().int().positive().default(20),
+    z.coerce.number().int().positive().default(8),
+  ),
+  DAILY_SESSION_LIMIT: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().positive().default(8),
   ),
 });
 
@@ -82,6 +95,7 @@ function makeEnvSchema(options: EnvSchemaOptions = {}) {
 export type AppEnv = z.infer<typeof EnvSchemaBase> & {
   GITHUB_USERNAME: string;
   ALLOWED_DEV_ORIGINS: string[];
+  CHAT_ALLOWED_ORIGINS: string[];
 };
 
 export type EnvValidationResult =

@@ -25,6 +25,49 @@ const ChatRequestSchema = z.object({
   messages: z.array(ChatMessageSchema).min(1).max(20),
   locale: z.enum(["en", "zh"]).optional(),
 });
+const SESSION_COOKIE = "tts_session";
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
+
+function getAllowedOrigins(request: NextRequest) {
+  const requestOrigin = new URL(request.url).origin;
+  const configuredOrigins = (process.env.CHAT_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return new Set([requestOrigin, ...configuredOrigins]);
+}
+
+function assertAllowedOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  if (!origin) {
+    return;
+  }
+
+  if (!getAllowedOrigins(request).has(origin)) {
+    throw new ChatError(ChatErrorCode.FORBIDDEN_ORIGIN);
+  }
+}
+
+function getOrCreateSessionId(request: NextRequest) {
+  const existing = request.cookies.get(SESSION_COOKIE)?.value;
+  if (existing && /^[a-zA-Z0-9_-]{16,80}$/.test(existing)) {
+    return { sessionId: existing, isNew: false };
+  }
+
+  return { sessionId: crypto.randomUUID(), isNew: true };
+}
+
+function getSessionCookie(sessionId: string) {
+  return [
+    `${SESSION_COOKIE}=${sessionId}`,
+    "Path=/",
+    `Max-Age=${SESSION_MAX_AGE}`,
+    "HttpOnly",
+    "SameSite=Lax",
+    "Secure",
+  ].join("; ");
+}
 
 function buildMessages(messages: ProviderMessage[], locale: "en" | "zh" = "en") {
   const context = getWikiContext();
@@ -92,10 +135,13 @@ export async function POST(request: NextRequest) {
   const startedAt = Date.now();
   const ip = getRequestIp(request);
   const ipHash = hashIp(ip);
+  const { sessionId, isNew } = getOrCreateSessionId(request);
+  const sessionCookie = isNew ? getSessionCookie(sessionId) : null;
 
   try {
+    assertAllowedOrigin(request);
     enforceMemoryRateLimit(ipHash);
-    const quota = await checkCostGuard(ip);
+    const quota = await checkCostGuard(ip, sessionId);
 
     if (!quota.allowed) {
       throw new ChatError(quota.errorCode);
@@ -153,6 +199,7 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "no-cache, no-transform",
+          ...(sessionCookie ? { "Set-Cookie": sessionCookie } : {}),
           "X-Request-Id": requestId,
         },
       });
@@ -178,12 +225,18 @@ export async function POST(request: NextRequest) {
       stack: process.env.NODE_ENV === "development" && error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
+    const errorResponse = NextResponse.json(
       {
         ...response.body,
         requestId,
       },
       { status: response.status },
     );
+
+    if (sessionCookie) {
+      errorResponse.headers.set("Set-Cookie", sessionCookie);
+    }
+
+    return errorResponse;
   }
 }

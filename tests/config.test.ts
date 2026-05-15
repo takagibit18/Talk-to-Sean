@@ -33,5 +33,8 @@ describe("env config", () => {
     expect(env.OPENAI_MODEL).toBe("gpt-5-mini");
     expect(env.OPENAI_BASE_URL).toBe("https://api.openai.com/v1");
     expect(env.ALLOWED_DEV_ORIGINS).toEqual(["10.80.12.101", "localhost:3001"]);
+    expect(env.DAILY_REQUEST_LIMIT).toBe(50);
+    expect(env.DAILY_IP_LIMIT).toBe(8);
+    expect(env.DAILY_SESSION_LIMIT).toBe(8);
   });
 });
