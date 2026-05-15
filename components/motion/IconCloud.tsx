@@ -255,6 +255,10 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
         };
         image.decoding = "async";
         image.src = src;
+        if (image.complete && image.naturalWidth > 0) {
+          entry.loaded = true;
+          draw();
+        }
         logoCache.set(src, entry);
       });
     };
