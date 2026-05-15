@@ -3,6 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
 import Skills from "@/components/cv/Skills";
+import {
+  ICON_CLOUD_ROTATION_CONFIG,
+  getIconCloudPointerDecay,
+} from "@/components/motion/IconCloud";
 import TopBar from "@/components/cv/TopBar";
 import { CV_DATA } from "@/lib/cv-data";
 
@@ -58,5 +62,26 @@ describe("homepage visual upgrade", () => {
     expect(
       screen.getByRole("img", { name: /technology icon cloud/i }),
     ).toBeInTheDocument();
+  });
+
+  test("icon cloud uses calm auto-rotation without speeding up on pointer hover", () => {
+    const fullYRotationSeconds =
+      (Math.PI * 2) / (ICON_CLOUD_ROTATION_CONFIG.autoRotateY * 60);
+
+    expect(fullYRotationSeconds).toBeGreaterThanOrEqual(12);
+    expect(fullYRotationSeconds).toBeLessThanOrEqual(18);
+    expect(ICON_CLOUD_ROTATION_CONFIG.autoRotateX).toBeLessThan(0.003);
+    expect(ICON_CLOUD_ROTATION_CONFIG.pointerRotateY).toBeGreaterThan(1.2);
+    expect(ICON_CLOUD_ROTATION_CONFIG.pointerRotateX).toBeGreaterThan(0.9);
+    expect(ICON_CLOUD_ROTATION_CONFIG.tickIncrement).toBe(1);
+    expect(ICON_CLOUD_ROTATION_CONFIG.pointerActiveTickIncrement).toBe(1);
+  });
+
+  test("icon cloud pointer influence eases out over the leave decay window", () => {
+    expect(ICON_CLOUD_ROTATION_CONFIG.pointerLeaveDecayMs).toBeGreaterThanOrEqual(1200);
+    expect(ICON_CLOUD_ROTATION_CONFIG.pointerLeaveDecayMs).toBeLessThanOrEqual(1800);
+    expect(getIconCloudPointerDecay(0)).toBe(1);
+    expect(getIconCloudPointerDecay(750)).toBeCloseTo(0.125);
+    expect(getIconCloudPointerDecay(1500)).toBe(0);
   });
 });

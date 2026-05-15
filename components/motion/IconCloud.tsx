@@ -22,6 +22,28 @@ type SpherePoint = {
 
 const DEFAULT_LABEL = "Interactive technology icon cloud";
 
+export const ICON_CLOUD_ROTATION_CONFIG = {
+  autoRotateY: 0.0059,
+  autoRotateX: 0.0024,
+  pointerRotateY: 1.7,
+  pointerRotateX: 1.3,
+  tickIncrement: 1,
+  pointerActiveTickIncrement: 1,
+  pointerLeaveDecayMs: 1500,
+} as const;
+
+export function getIconCloudPointerDecay(
+  elapsedMs: number,
+  durationMs = ICON_CLOUD_ROTATION_CONFIG.pointerLeaveDecayMs,
+) {
+  const progress = Math.min(Math.max(elapsedMs / durationMs, 0), 1);
+  return Math.pow(1 - progress, 3);
+}
+
+function clampPointer(value: number) {
+  return Math.min(0.5, Math.max(-0.5, value));
+}
+
 function createSpherePoints(count: number) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
 
@@ -93,7 +115,41 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
     let width = 320;
     let height = 320;
     let dpr = 1;
-    const pointer = { x: 0, y: 0, active: false };
+    const pointer = {
+      x: 0,
+      y: 0,
+      active: false,
+      leaveStart: 0,
+      leaveFromX: 0,
+      leaveFromY: 0,
+    };
+
+    const getPointerInfluence = (now: number) => {
+      if (reducedMotion) {
+        return { x: 0, y: 0 };
+      }
+
+      if (pointer.active) {
+        return { x: pointer.x, y: pointer.y };
+      }
+
+      if (pointer.leaveStart === 0) {
+        return { x: 0, y: 0 };
+      }
+
+      const decay = getIconCloudPointerDecay(now - pointer.leaveStart);
+      if (decay <= 0) {
+        pointer.leaveStart = 0;
+        pointer.x = 0;
+        pointer.y = 0;
+        return { x: 0, y: 0 };
+      }
+
+      return {
+        x: pointer.leaveFromX * decay,
+        y: pointer.leaveFromY * decay,
+      };
+    };
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -105,9 +161,17 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       draw();
     };
 
-    const project = (point: SpherePoint, index: number) => {
-      const rotationY = tick * 0.011 + pointer.x * 0.82;
-      const rotationX = tick * 0.006 - pointer.y * 0.62;
+    const project = (
+      point: SpherePoint,
+      index: number,
+      pointerInfluence: { x: number; y: number },
+    ) => {
+      const rotationY =
+        tick * ICON_CLOUD_ROTATION_CONFIG.autoRotateY +
+        pointerInfluence.x * ICON_CLOUD_ROTATION_CONFIG.pointerRotateY;
+      const rotationX =
+        tick * ICON_CLOUD_ROTATION_CONFIG.autoRotateX -
+        pointerInfluence.y * ICON_CLOUD_ROTATION_CONFIG.pointerRotateX;
       const cosY = Math.cos(rotationY);
       const sinY = Math.sin(rotationY);
       const cosX = Math.cos(rotationX);
@@ -129,7 +193,7 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       };
     };
 
-    function draw() {
+    function draw(now = performance.now()) {
       if (!ctx) {
         return;
       }
@@ -138,8 +202,9 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       const border = cssVar("--color-border", "#2f2a22");
       const text = cssVar("--color-text-strong", "#f4ead8");
       const muted = cssVar("--color-text-muted", "#a39b8b");
+      const pointerInfluence = getPointerInfluence(now);
       const cloudItems = points
-        .map((point, index) => project(point, index))
+        .map((point, index) => project(point, index, pointerInfluence))
         .sort((a, b) => a.z - b.z);
 
       ctx.save();
@@ -215,7 +280,7 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
 
     const animate = () => {
       if (!reducedMotion) {
-        tick += pointer.active ? 1.35 : 1;
+        tick += ICON_CLOUD_ROTATION_CONFIG.tickIncrement;
       }
       draw();
       if (!reducedMotion) {
@@ -224,22 +289,26 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
     };
 
     const handlePointerMove = (event: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      pointer.x = (event.clientX - rect.left - rect.width / 2) / rect.width;
-      pointer.y = (event.clientY - rect.top - rect.height / 2) / rect.height;
-      pointer.active = true;
       if (reducedMotion) {
-        draw();
+        return;
       }
+
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = clampPointer((event.clientX - rect.left - rect.width / 2) / rect.width);
+      pointer.y = clampPointer((event.clientY - rect.top - rect.height / 2) / rect.height);
+      pointer.active = true;
+      pointer.leaveStart = 0;
     };
 
     const handlePointerLeave = () => {
-      pointer.x = 0;
-      pointer.y = 0;
-      pointer.active = false;
       if (reducedMotion) {
-        draw();
+        return;
       }
+
+      pointer.leaveFromX = pointer.x;
+      pointer.leaveFromY = pointer.y;
+      pointer.leaveStart = performance.now();
+      pointer.active = false;
     };
 
     canvas.addEventListener("pointermove", handlePointerMove, { passive: true });
