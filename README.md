@@ -1,87 +1,108 @@
-<div align="center">
+# GitHub Homepage
 
-<!-- Glassmorphism + neon style header -->
-<img src="https://capsule-render.vercel.app/api?type=waving&height=220&color=0:0f0c29,35:1f1b4d,70:302b63,100:0b1020&text=Sean%20Yu&fontColor=79c0ff&fontSize=56&animation=fadeIn&fontAlignY=36&desc=CS%20Student%20%7C%20Agent%20and%20RAG%20Engineer&descAlignY=58&descSize=18" alt="header" />
+基于 Next.js 15 的个人主页项目，聚合展示 GitHub 资料、仓库列表和近一年贡献热力图。
 
-<h1>Sean Yu</h1>
-<p>
-  CS learner focused on LLM apps, agents, RAG, and pragmatic engineering
-</p>
+## 启动指令
 
-</div>
+在项目根目录执行：
 
----
+```bash
+npm install
+npm run dev
+```
 
-## Talk-to-Sean v2 Product Surface
+本地访问地址：`http://localhost:3000`
 
-This repository now serves the runtime version of Sean's personal homepage and AI profile assistant.
+## 生产模式启动
 
-- `/` renders Hero, About, Skills, Projects, Activity, Education, Languages, Publications, Contact, and Footer.
-- `/chat` renders the Talk to Sean AI profile assistant.
-- `/api/chat` calls an OpenAI-compatible model provider from the server side.
-- `/api/health` supports deployment smoke checks.
-- `/api/dev/config-check` exposes masked configuration self-checks in development only.
+```bash
+npm run build
+npm start
+```
 
-The homepage CTA is explicit: the `Talk to Sean` button routes directly to `/chat`.
+## 环境变量
 
----
+1. 复制环境变量模板：
 
-## Tech Stack
+```bash
+cp .env.example .env.local
+```
 
-<div align="center">
+1. 编辑 `.env.local`：
 
-![Python](https://img.shields.io/badge/Python-111827?style=for-the-badge&logo=python&logoColor=F7DF1E)
-![FastAPI](https://img.shields.io/badge/FastAPI-0F172A?style=for-the-badge&logo=fastapi&logoColor=22D3EE)
-![LangChain](https://img.shields.io/badge/LangChain-0B1220?style=for-the-badge&logo=chainlink&logoColor=93C5FD)
-![LlamaIndex](https://img.shields.io/badge/LlamaIndex-0E1B2E?style=for-the-badge&logo=llama&logoColor=60A5FA)
-![RAG](https://img.shields.io/badge/RAG-Pipeline-10203A?style=for-the-badge&logo=readthedocs&logoColor=38BDF8)
-![Qdrant](https://img.shields.io/badge/Qdrant-111827?style=for-the-badge&logo=qdrant&logoColor=22C55E)
-![Chroma](https://img.shields.io/badge/Chroma-0F1E35?style=for-the-badge&logo=databricks&logoColor=A78BFA)
-![Redis](https://img.shields.io/badge/Redis-09131F?style=for-the-badge&logo=redis&logoColor=EF4444)
-![Docker](https://img.shields.io/badge/Docker-0F1A12?style=for-the-badge&logo=docker&logoColor=60A5FA)
-![OpenAI](https://img.shields.io/badge/OpenAI_API-111827?style=for-the-badge&logo=openai&logoColor=10B981)
-![Claude](https://img.shields.io/badge/Claude_API-1F2937?style=for-the-badge&logo=anthropic&logoColor=F59E0B)
-![Pytest](https://img.shields.io/badge/Pytest-0B1220?style=for-the-badge&logo=pytest&logoColor=FACC15)
+```env
+GITHUB_USERNAME=yourusername
+# 可选：用于提高 GitHub API 速率限制
+GITHUB_PAT=ghp_xxxxxxxxxxxxxxxxxxxx
+```
 
-</div>
+说明：
 
----
+- `GITHUB_USERNAME` 必填
+- `GITHUB_PAT` 可选，不填也能运行
 
-## Featured Projects
+## 当前功能
 
-<p align="left">
-  <a href="https://github.com/takagibit18/review-debug-agent">
-    <img width="420" src="https://denvercoder1-github-readme-stats.vercel.app/api/pin/?username=takagibit18&repo=review-debug-agent&theme=react&bg_color=1F222E&title_color=79c0ff&hide_border=true&icon_color=58a6ff&show_icons=true&show_description=true" alt="review-debug-agent" />
-  </a>
-  <a href="https://github.com/takagibit18/shotgunCV">
-    <img width="420" src="https://denvercoder1-github-readme-stats.vercel.app/api/pin/?username=takagibit18&repo=shotgunCV&theme=react&bg_color=1F222E&title_color=79c0ff&hide_border=true&icon_color=58a6ff&show_icons=true&show_description=true" alt="shotgunCV" />
-  </a>
-</p>
+- 个人资料卡片（头像、简介、关注数据、社交链接）
+- 最近更新仓库网格（语言、Star、Fork、更新时间）
+- 近一年贡献热力图（52x7）
+- About / Skills / Contact 静态区块
+- 深色沉浸式视觉 + 轻量动效
 
----
+## 技术栈
 
-## Contribution Graph
+- Next.js 15 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- Framer Motion
+- Lucide React
 
-<div align="center">
+## 项目结构
 
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=takagibit18&theme=github-compact&hide_border=true&area=true&custom_title=Contribution%20Activity" alt="contribution activity graph" />
+```text
+app/
+	layout.tsx               # 全局布局、字体与页面背景
+	page.tsx                 # 首页编排与数据渲染
+	globals.css              # 全局设计令牌与语义样式
+	loading.tsx              # 加载态
+	error.tsx                # 错误态
+components/
+	ProfileCard.tsx          # 个人资料卡片
+	RepoGrid.tsx             # 仓库网格
+	ContributionHeatmap.tsx  # 贡献热力图
+lib/
+	github.ts                # GitHub 用户和仓库数据获取
+	contributions.ts         # 贡献数据获取
+```
 
-</div>
+## 常用命令
 
----
+```bash
+# 开发
+npm run dev
 
-## About Me
+# 构建
+npm run build
 
-- I focus on Agent Developer / LLM Application Engineer.
-- I now have hands-on proficiency in Python engineering, production-grade RAG pipelines, and LLM service delivery.
-- Core strengths include hybrid retrieval (BM25 + vector), reranking, context compression, and evaluation-driven optimization with clear metrics.
-- I can build reliable systems with FastAPI, Docker, Redis, structured testing, and cost-aware API orchestration.
-- I have practical experience with Agent design patterns such as ReAct and Plan-and-Execute, and I choose architectures based on task complexity and ROI.
-- I stay actively curious: I learn new tools quickly, validate ideas through rapid prototypes, and turn lessons into reusable engineering patterns.
-- I value disciplined iteration, clear technical documentation, and continuous improvement from feedback.
+# 生产启动
+npm start
 
----
+# Lint
+npm run lint
+```
 
-## Architecture Notes
+## 部署说明
 
-- [Chatbot deployment strategy](docs/chatbot-deployment-strategy.md): domestic static entry, overseas chatbot service, and API ownership plan.
+推荐部署到 Vercel：
+
+1. 将仓库连接到 Vercel
+2. 在 Vercel 项目环境变量中设置 `GITHUB_USERNAME`
+3. 按需设置 `GITHUB_PAT`
+4. 触发部署
+
+国内域名 + 阿里云低成本部署方案见：[DEPLOY_ALIYUN.md](DEPLOY_ALIYUN.md)
+
+## API 速率限制
+
+GitHub 未认证请求默认速率限制为每小时 60 次（按 IP）。
+配置 `GITHUB_PAT` 后可提升到每小时 5000 次。

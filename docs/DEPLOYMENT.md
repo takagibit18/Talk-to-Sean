@@ -11,8 +11,8 @@ Talk-to-Sean v2 runs as a Next.js app with server-side API routes. Do not deploy
 | `OPENAI_MODEL` | No | Chat model name. Defaults to `gpt-5-mini`. |
 | `OPENAI_BASE_URL` | No | OpenAI-compatible base URL. Defaults to `https://api.openai.com/v1`. |
 | `GITHUB_PAT` | No | Raises GitHub API limits and reduces unauthenticated API failures. |
-| `UPSTASH_REDIS_REST_URL` | Production chat: Yes | Persistent Redis REST URL for public quota enforcement. Production `/api/chat` fails closed without it. |
-| `UPSTASH_REDIS_REST_TOKEN` | Production chat: Yes | Persistent Redis REST token for public quota enforcement. Production `/api/chat` fails closed without it. |
+| `UPSTASH_REDIS_REST_URL` or `KV_REST_API_URL` | Production chat: Yes | Persistent Redis REST URL for public quota enforcement. Vercel KV integrations usually inject `KV_REST_API_URL`. |
+| `UPSTASH_REDIS_REST_TOKEN` or `KV_REST_API_TOKEN` | Production chat: Yes | Persistent Redis REST token for public quota enforcement. Vercel KV integrations usually inject `KV_REST_API_TOKEN`. |
 | `DAILY_REQUEST_LIMIT` | No | Owner-side public daily request cap. Defaults to `50`. |
 | `DAILY_IP_LIMIT` | No | Per-IP daily cap. Defaults to `8`. |
 | `DAILY_SESSION_LIMIT` | No | Anonymous browser-session daily cap. Defaults to `8`. |
@@ -24,7 +24,7 @@ Use an isolated low-cost preview API key and model for Vercel Preview environmen
 
 ## Public Chat Protection
 
-Production `/api/chat` is intentionally fail-closed unless Upstash Redis is configured. In-memory counters are acceptable for local development and tests, but they are not reliable protection on Vercel because serverless instances can cold-start or scale horizontally. Configure an Upstash Redis integration before enabling `OPENAI_API_KEY` for production chat.
+Production `/api/chat` is intentionally fail-closed unless Upstash Redis is configured. In-memory counters are acceptable for local development and tests, but they are not reliable protection on Vercel because serverless instances can cold-start or scale horizontally. Configure an Upstash Redis or Vercel KV integration before enabling `OPENAI_API_KEY` for production chat.
 
 The chat endpoint enforces three quota layers:
 

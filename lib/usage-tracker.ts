@@ -14,7 +14,13 @@ const memoryUsage: Array<Omit<UsageRecord, "ip"> & { ipHash: string }> = [];
 let warnedAboutUsageStore = false;
 
 function getRedis() {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const hasUpstashRest =
+    Boolean(process.env.UPSTASH_REDIS_REST_URL) &&
+    Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
+  const hasVercelKvRest =
+    Boolean(process.env.KV_REST_API_URL) && Boolean(process.env.KV_REST_API_TOKEN);
+
+  if (!hasUpstashRest && !hasVercelKvRest) {
     return null;
   }
 
