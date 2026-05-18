@@ -10,6 +10,7 @@ import {
   type ProviderStreamComplete,
 } from "@/lib/model-provider";
 import { enforceMemoryRateLimit } from "@/lib/rate-limit";
+import { guardPublicProfileAnswer } from "@/lib/public-profile-guard";
 import { getRequestIp, hashIp } from "@/lib/request";
 import { recordUsage } from "@/lib/usage-tracker";
 import { getWikiContext } from "@/lib/wiki-context";
@@ -82,6 +83,8 @@ function buildMessages(messages: ProviderMessage[], locale: "en" | "zh" = "en") 
       content: [
         "You are Sean Yu's public AI profile assistant.",
         "Keep answers concise, factual, and grounded in the provided public profile context.",
+        "If the public profile context does not contain the answer, say so instead of guessing or inventing.",
+        "For identity and contact questions, use only the exact public fields in the context.",
         "Do not invent private details or claim to be Sean.",
         languageInstruction,
         "",
@@ -90,6 +93,16 @@ function buildMessages(messages: ProviderMessage[], locale: "en" | "zh" = "en") 
     },
     ...messages.filter((message) => message.role !== "system"),
   ];
+}
+
+function getLastUserMessage(messages: ProviderMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index].role === "user") {
+      return messages[index].content;
+    }
+  }
+
+  return "";
 }
 
 function parseChatBody(body: unknown) {
@@ -148,6 +161,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = parseChatBody(await readChatBody(request));
+    const locale = body.locale || "en";
+    const lastUserMessage = getLastUserMessage(body.messages);
     const config = getModelConfig();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
@@ -176,7 +191,7 @@ export async function POST(request: NextRequest) {
 
       const stream = await createChatCompletionStream(
         config,
-        buildMessages(body.messages, body.locale),
+        buildMessages(body.messages, locale),
         controller.signal,
         finalizeStream,
         (error) => {
@@ -191,6 +206,12 @@ export async function POST(request: NextRequest) {
           clearTimeout(timeout);
         },
         () => clearTimeout(timeout),
+        (assistantMessage) =>
+          guardPublicProfileAnswer({
+            locale,
+            userMessage: lastUserMessage,
+            assistantMessage,
+          }),
       );
 
       streamStarted = true;

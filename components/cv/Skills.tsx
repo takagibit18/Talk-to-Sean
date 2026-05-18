@@ -78,7 +78,7 @@ export default function Skills({ data }: { data: CVData }) {
                       scale: 1.03,
                       boxShadow: "0 0 8px var(--color-accent-strong, rgba(234,201,119,0.4))",
                     }}
-                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 35 }}
                   >
                     {item}
                   </motion.span>

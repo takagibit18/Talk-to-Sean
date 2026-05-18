@@ -125,4 +125,31 @@ describe("chat route streaming", () => {
     });
     expect(response.headers.get("set-cookie")).toContain("tts_session=");
   });
+
+  it("sends a strict groundedness instruction and guards invented contact output", async () => {
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        makeProviderStream([
+          'data: {"choices":[{"delta":{"content":"Email Sean at fake@example.com."}}]}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", providerFetch);
+
+    const response = await POST(
+      makeRequest({ messages: [{ role: "user", content: "How can I contact Sean?" }], locale: "en" }),
+    );
+
+    const requestBody = JSON.parse(String(providerFetch.mock.calls[0][1]?.body));
+    expect(requestBody.messages[0].content).toContain(
+      "If the public profile context does not contain the answer, say so instead of guessing or inventing.",
+    );
+    expect(requestBody.messages[0].content).toContain("欣禹行");
+    await expect(response.text()).resolves.toContain("huali6641@gmail.com");
+  });
 });
