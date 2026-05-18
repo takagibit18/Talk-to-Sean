@@ -1,108 +1,111 @@
-# GitHub Homepage
+# Talk-to-Sean
 
-基于 Next.js 15 的个人主页项目，聚合展示 GitHub 资料、仓库列表和近一年贡献热力图。
+Next.js 15 personal homepage with a server-side AI profile assistant. The app shows Sean's GitHub profile, repositories, contribution activity, and a `/chat` surface backed by an OpenAI-compatible model provider.
 
-## 启动指令
+## Product Surface
 
-在项目根目录执行：
+- `/` renders the homepage: hero, profile, repositories, activity, skills, projects, education, publications, and contact sections.
+- `/chat` renders the Talk to Sean AI profile assistant.
+- `/api/chat` streams assistant responses from a server-side OpenAI-compatible provider.
+- `/api/health` supports deployment smoke checks.
+- `/api/dev/config-check` exposes masked configuration checks in development only.
+
+## Quick Start
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-本地访问地址：`http://localhost:3000`
+Local URL: `http://localhost:3000`
 
-## 生产模式启动
+## Environment
 
-```bash
-npm run build
-npm start
-```
-
-## 环境变量
-
-1. 复制环境变量模板：
-
-```bash
-cp .env.example .env.local
-```
-
-1. 编辑 `.env.local`：
+Required:
 
 ```env
-GITHUB_USERNAME=yourusername
-# 可选：用于提高 GitHub API 速率限制
-GITHUB_PAT=ghp_xxxxxxxxxxxxxxxxxxxx
+OPENAI_API_KEY=sk-your-provider-key
+GITHUB_USERNAME=your-github-username
 ```
 
-说明：
+Optional provider settings:
 
-- `GITHUB_USERNAME` 必填
-- `GITHUB_PAT` 可选，不填也能运行
+```env
+OPENAI_MODEL=gpt-5-mini
+OPENAI_BASE_URL=https://api.openai.com/v1
+GITHUB_PAT=
+```
 
-## 当前功能
+Production chat protection requires persistent Redis-compatible storage. Use either Upstash Redis REST variables or Vercel KV REST variables:
 
-- 个人资料卡片（头像、简介、关注数据、社交链接）
-- 最近更新仓库网格（语言、Star、Fork、更新时间）
-- 近一年贡献热力图（52x7）
-- About / Skills / Contact 静态区块
-- 深色沉浸式视觉 + 轻量动效
+```env
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+KV_REST_API_URL=
+KV_REST_API_TOKEN=
+```
 
-## 技术栈
+Local development can use in-memory counters. Production `/api/chat` intentionally fails closed when persistent storage is missing.
 
-- Next.js 15 (App Router)
-- React 19 + TypeScript
+## Cost Controls
+
+```env
+DAILY_REQUEST_LIMIT=50
+DAILY_IP_LIMIT=8
+DAILY_SESSION_LIMIT=8
+CHAT_ALLOWED_ORIGINS=
+ALLOWED_DEV_ORIGINS=localhost:3000
+```
+
+`CHAT_ALLOWED_ORIGINS` is for production chat origin allowlisting. `ALLOWED_DEV_ORIGINS` is only for local device testing with Next dev.
+
+## Commands
+
+```bash
+npm run dev
+npm run build
+npm start
+npm run lint
+npm run typecheck
+npm run test
+npm run knowledge:check
+```
+
+## Deployment
+
+Deploy as a full Next.js app with server-side routes. Static-only hosting will not run `/api/chat`.
+
+Recommended Vercel setup:
+
+1. Connect the repository to Vercel.
+2. Set `OPENAI_API_KEY` and `GITHUB_USERNAME`.
+3. Add `GITHUB_PAT` if GitHub API rate limits are an issue.
+4. Configure Upstash Redis or Vercel KV before enabling production chat.
+5. Keep preview deployments on isolated low-cost model keys and lower daily limits.
+
+Detailed deployment notes: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+Domestic static entry plus overseas chatbot service notes: [DEPLOY_ALIYUN.md](DEPLOY_ALIYUN.md)
+
+## Tech Stack
+
+- Next.js 15 App Router
+- React 19
+- TypeScript
 - Tailwind CSS 4
 - Framer Motion
 - Lucide React
+- Upstash Redis or Vercel KV for persistent public chat quotas
 
-## 项目结构
+## Repository Layout
 
 ```text
-app/
-	layout.tsx               # 全局布局、字体与页面背景
-	page.tsx                 # 首页编排与数据渲染
-	globals.css              # 全局设计令牌与语义样式
-	loading.tsx              # 加载态
-	error.tsx                # 错误态
-components/
-	ProfileCard.tsx          # 个人资料卡片
-	RepoGrid.tsx             # 仓库网格
-	ContributionHeatmap.tsx  # 贡献热力图
-lib/
-	github.ts                # GitHub 用户和仓库数据获取
-	contributions.ts         # 贡献数据获取
+app/                 Next.js routes, API routes, layouts, metadata
+components/          Homepage, motion, and chat UI components
+content/             Public assistant context corpus
+docs/                Deployment and architecture notes
+lib/                 Config, provider, GitHub, cost guard, and usage logic
+scripts/             Knowledge-context validation
+tests/               Vitest route, config, prompt, and guard coverage
 ```
-
-## 常用命令
-
-```bash
-# 开发
-npm run dev
-
-# 构建
-npm run build
-
-# 生产启动
-npm start
-
-# Lint
-npm run lint
-```
-
-## 部署说明
-
-推荐部署到 Vercel：
-
-1. 将仓库连接到 Vercel
-2. 在 Vercel 项目环境变量中设置 `GITHUB_USERNAME`
-3. 按需设置 `GITHUB_PAT`
-4. 触发部署
-
-国内域名 + 阿里云低成本部署方案见：[DEPLOY_ALIYUN.md](DEPLOY_ALIYUN.md)
-
-## API 速率限制
-
-GitHub 未认证请求默认速率限制为每小时 60 次（按 IP）。
-配置 `GITHUB_PAT` 后可提升到每小时 5000 次。
