@@ -10,7 +10,17 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, SendHorizontal, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Box,
+  ChartSpline,
+  CodeXml,
+  RotateCcw,
+  SendHorizontal,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChatErrorCode } from "@/lib/chat-errors";
 import { getChatErrorMessage } from "@/lib/chat-ui";
@@ -30,6 +40,7 @@ type ChatShellProps = {
 
 const MAX_CHARS = 1200;
 const BUBBLE_EASE = [0.22, 0.68, 0.2, 1] as const;
+const STARTER_ICONS = [Box, CodeXml, ChartSpline] as const;
 
 function createId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -280,18 +291,18 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
     <main
       id="main-content"
       data-chat-ready={isHydrated ? "true" : "false"}
-      className="cv-container relative min-h-screen py-8 md:py-12"
+      className="chat-page cv-container relative min-h-screen py-8 md:py-12"
     >
       <div className="page-grain" aria-hidden />
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link href={homepageHref} className="cv-cta cv-cta--ghost focus-ring text-sm">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col">
+        <header className="chat-topbar mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link href={homepageHref} className="cv-cta cv-cta--ghost focus-ring chat-nav-button">
             <ArrowLeft size={16} />
             {copy.backHome}
           </Link>
           <button
             type="button"
-            className="cv-cta focus-ring text-sm"
+            className="cv-cta cv-cta--ghost focus-ring chat-nav-button"
             onClick={resetChat}
             disabled={messages.length === 0 && !error && !input}
           >
@@ -300,40 +311,58 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
           </button>
         </header>
 
-        <section className="cv-section-panel flex flex-1 flex-col overflow-hidden">
-          <div className="border-b border-[color:var(--color-border)] p-5 md:p-6">
-            <div className="cv-badge cv-badge--accent">
-              <Sparkles size={14} />
-              {copy.eyebrow}
+        <section className="chat-product-panel flex flex-1 flex-col overflow-hidden">
+          <div className="chat-hero-stage border-b border-[color:var(--color-border)] p-5 md:p-8">
+            <div className="chat-hero-copy">
+              <div className="cv-badge cv-badge--accent chat-assistant-badge">
+                <Sparkles size={14} />
+                {copy.eyebrow}
+              </div>
+              <h1 className="chat-title mt-6">{copy.title}</h1>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-[color:var(--color-text-muted)] md:text-base">
+                {copy.welcomeBody}
+              </p>
             </div>
-            <h1 className="cv-heading-lg mt-4">{copy.title}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--color-text-muted)]">
-              {copy.welcomeBody}
-            </p>
+            <div className="chat-ambient-field" aria-hidden>
+              <div className="chat-orbit chat-orbit--one" />
+              <div className="chat-orbit chat-orbit--two" />
+              <div className="chat-orbit chat-orbit--three" />
+              <div className="chat-signal-card chat-signal-card--top">
+                <span />
+                <span />
+              </div>
+              <div className="chat-signal-card chat-signal-card--bottom">
+                <span />
+                <span />
+              </div>
+            </div>
           </div>
 
-          <div className="relative min-h-0 flex-1">
+          <div className="relative min-h-0 flex-1 border-b border-[color:var(--color-border)]">
             <div
               ref={scrollContainerRef}
-              className="chat-scroll-area h-full overflow-y-auto p-5 md:p-6"
+              className="chat-scroll-area h-full overflow-y-auto p-5 md:p-8"
               aria-live="polite"
               aria-relevant="additions text"
               onScroll={handleMessageScroll}
             >
               {isEmptyChat ? (
-                <div className="grid gap-5">
+                <div className="chat-empty-grid grid gap-6">
                   <div>
-                    <p className="text-sm uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
+                    <p className="chat-section-kicker text-sm uppercase text-[color:var(--color-accent-strong)]">
                       {copy.ready}
                     </p>
-                    <h2 className="cv-heading-sm mt-3">{copy.welcomeTitle}</h2>
+                    <h2 className="chat-question-title mt-3">{copy.welcomeTitle}</h2>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {copy.starterPrompts.map((prompt) => (
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {copy.starterPrompts.map((prompt, index) => {
+                      const StarterIcon = STARTER_ICONS[index % STARTER_ICONS.length];
+
+                      return (
                       <button
                         key={prompt}
                         type="button"
-                        className="focus-ring rounded-[0.5rem] border border-[color:var(--color-border)] bg-[rgba(244,234,216,0.03)] p-4 text-left text-sm leading-6 text-[color:var(--color-text)] transition hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-text-strong)]"
+                        className="chat-starter-card focus-ring group"
                         onClick={() => {
                           setInput(prompt);
                           requestAnimationFrame(() => {
@@ -342,9 +371,14 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                           });
                         }}
                       >
-                        {prompt}
+                        <span className="chat-starter-icon">
+                          <StarterIcon size={20} />
+                        </span>
+                        <span className="min-w-0 flex-1">{prompt}</span>
+                        <ArrowRight className="chat-starter-arrow" size={18} />
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
@@ -463,12 +497,15 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
 
           <form
             onSubmit={handleSubmit}
-            className="border-t border-[color:var(--color-border)] p-4 md:p-5"
+            className="chat-composer-form p-4 md:p-7"
           >
             <label className="sr-only" htmlFor="chat-message">
               {copy.placeholder}
             </label>
-            <div className="grid gap-3">
+            <div className="chat-composer-shell">
+              <div className="chat-composer-mark" aria-hidden>
+                <Sparkles size={20} />
+              </div>
               <textarea
                 id="chat-message"
                 ref={textareaRef}
@@ -481,23 +518,27 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                   resizeTextarea();
                 }}
                 onKeyDown={handleKeyDown}
-                className={`focus-ring min-h-[3.5rem] resize-none rounded-[0.5rem] border border-[color:var(--color-border)] bg-[rgba(8,8,7,0.72)] px-4 py-3 text-sm leading-6 text-[color:var(--color-text-strong)] placeholder:text-[color:var(--color-text-muted)] ${
+                className={`chat-composer-input focus-ring ${
                   isEmptyChat ? "chat-input--pulse" : ""
                 }`}
               />
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs text-[color:var(--color-text-muted)]" aria-live="polite">
+              <div className="chat-composer-actions">
+                <div className="chat-input-hint" aria-live="polite">
                   {showCharacterCount ? copy.characterCount(remaining) : copy.shiftEnterTooltip}
                 </div>
                 <button
                   type="submit"
-                  className="cv-cta cv-cta-primary focus-ring text-sm"
+                  className="chat-send-button focus-ring"
                   disabled={!input.trim() || isSubmitting}
+                  aria-label={copy.send}
                 >
-                  {copy.send}
-                  <SendHorizontal size={15} />
+                  <SendHorizontal size={22} />
                 </button>
               </div>
+            </div>
+            <div className="chat-grounding-note">
+              <ShieldCheck size={15} />
+              {copy.welcomeBody}
             </div>
           </form>
         </section>

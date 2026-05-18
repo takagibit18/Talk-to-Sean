@@ -5,7 +5,13 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:github-contributions.vercel.app)",
       "Bash(npx create-next-app@latest:*)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Read(//e/PycharmProjects/知识库/Agent知识库/raw/sources/events/**)",
+      "Read(//e/PycharmProjects/知识库/Agent知识库/wiki/entities/**)",
+      "Read(//e/PycharmProjects/知识库/Agent知识库/raw/sources/articles/**)",
+      "Read(//e/PycharmProjects/知识库/Agent知识库/wiki/concepts/**)",
+      "Read(//e/PycharmProjects/知识库/Agent知识库/wiki/sources/**)",
+      "Read(//e/PycharmProjects/知识库/Agent知识库/wiki/**)"
     ]
   }
 }

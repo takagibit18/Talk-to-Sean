@@ -110,6 +110,7 @@ export async function createChatCompletionStream(
   onComplete: (result: ProviderStreamComplete) => Promise<void>,
   onError?: (error: unknown) => void,
   onCancel?: () => void,
+  transformMessage?: (message: string) => string,
 ): Promise<ReadableStream<Uint8Array>> {
   const endpoint = new URL("chat/completions", `${config.baseURL.replace(/\/$/, "")}/`);
 
@@ -122,7 +123,7 @@ export async function createChatCompletionStream(
     body: JSON.stringify({
       model: config.model,
       messages,
-      temperature: 0.3,
+      temperature: 0.1,
       stream: true,
       stream_options: { include_usage: true },
     }),
@@ -143,6 +144,21 @@ export async function createChatCompletionStream(
   let buffer = "";
   let message = "";
   let usage: ProviderResult["usage"] | undefined;
+  let finalized = false;
+
+  const finalize = async (controller: ReadableStreamDefaultController<Uint8Array>) => {
+    if (finalized) {
+      return;
+    }
+
+    finalized = true;
+    const finalMessage = transformMessage ? transformMessage(message) : message.trim();
+    if (finalMessage) {
+      controller.enqueue(encoder.encode(finalMessage));
+    }
+    await onComplete({ message: finalMessage.trim(), usage });
+    controller.close();
+  };
 
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
@@ -151,8 +167,7 @@ export async function createChatCompletionStream(
           const { done, value } = await reader.read();
 
           if (done) {
-            await onComplete({ message: message.trim(), usage });
-            controller.close();
+            await finalize(controller);
             return;
           }
 
@@ -171,8 +186,7 @@ export async function createChatCompletionStream(
             }
 
             if (payload === "[DONE]") {
-              await onComplete({ message: message.trim(), usage });
-              controller.close();
+              await finalize(controller);
               return;
             }
 
@@ -180,7 +194,6 @@ export async function createChatCompletionStream(
             const content = body?.choices?.[0]?.delta?.content;
             if (typeof content === "string" && content.length > 0) {
               message += content;
-              controller.enqueue(encoder.encode(content));
             }
 
             if (body?.usage) {
