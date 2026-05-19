@@ -26,6 +26,7 @@ import { ChatErrorCode } from "@/lib/chat-errors";
 import { getChatErrorMessage } from "@/lib/chat-ui";
 import { CV_DATA } from "@/lib/cv-data";
 import type { Locale } from "@/lib/locale";
+import { ChatMarkdown } from "@/components/chat/ChatMarkdown";
 
 type ChatMessage = {
   id: string;
@@ -293,7 +294,6 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
       data-chat-ready={isHydrated ? "true" : "false"}
       className="chat-page cv-container relative min-h-screen py-8 md:py-12"
     >
-      <div className="page-grain" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col">
         <header className="chat-topbar mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link href={homepageHref} className="cv-cta cv-cta--ghost focus-ring chat-nav-button">
@@ -323,19 +323,7 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                 {copy.welcomeBody}
               </p>
             </div>
-            <div className="chat-ambient-field" aria-hidden>
-              <div className="chat-orbit chat-orbit--one" />
-              <div className="chat-orbit chat-orbit--two" />
-              <div className="chat-orbit chat-orbit--three" />
-              <div className="chat-signal-card chat-signal-card--top">
-                <span />
-                <span />
-              </div>
-              <div className="chat-signal-card chat-signal-card--bottom">
-                <span />
-                <span />
-              </div>
-            </div>
+            <div className="chat-ambient-field" aria-hidden />
           </div>
 
           <div className="relative min-h-0 flex-1 border-b border-[color:var(--color-border)]">
@@ -411,18 +399,24 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                         <div className="mb-2 text-xs uppercase tracking-[0.16em] text-[color:var(--color-text-muted)]">
                           {isUser ? copy.visitor : copy.assistant}
                         </div>
-                        <motion.p
+                        <motion.div
                           className="whitespace-pre-wrap"
                           animate={{ opacity: message.status === "complete" ? 1 : 0.94 }}
                           transition={{ duration: reducedMotion ? 0 : 0.22 }}
                         >
-                          {message.content}
-                          {isStreaming && (
-                            <span className="chat-stream-cursor" aria-hidden>
-                              |
-                            </span>
+                          {isUser ? (
+                            <>
+                              {message.content}
+                              {isStreaming && (
+                                <span className="chat-stream-cursor" aria-hidden>
+                                  |
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <ChatMarkdown content={message.content} isStreaming={isStreaming} />
                           )}
-                        </motion.p>
+                        </motion.div>
                       </motion.article>
                     );
                   })}

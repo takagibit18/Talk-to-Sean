@@ -201,24 +201,28 @@ export const CV_DATA: Record<Locale, CVData> = {
     about: {
       meta: "who I am",
       body:
-        "CS undergraduate at Minzu University of China (985). I build LLM-backed services with Python, FastAPI, Pydantic, and async patterns, plus MySQL and Redis. I care about prompt design, structured outputs, tool calling, retrieval quality, and agent orchestration. My default loop is prototype, trace, evaluate, then harden the system with Docker, GitHub Actions, and reviewable open-source workflows.",
+        "AI Native developer focused on traceable Agent, RAG, and workflow systems. My default loop is prototype -> trace -> evaluate -> harden: build quickly, expose tool calls and context, measure behavior with evals, then stabilize with Docker, GitHub Actions, and reviewable workflows. I also treat my LLM Wiki as a Content Operating System for turning project work into reusable knowledge assets.",
     },
     skills: [
       {
         group: "Languages & backend",
-        items: ["Python", "FastAPI", "Pydantic", "pytest", "async I/O", "MySQL", "Redis"],
+        items: ["Python", "TypeScript", "FastAPI", "Pydantic", "pytest", "Async I/O / asyncio", "MySQL", "Redis"],
+      },
+      {
+        group: "Frontend & streaming",
+        items: ["Next.js", "React", "Vercel AI SDK", "Streaming UI", "Tailwind CSS"],
       },
       {
         group: "LLM & agents",
-        items: ["OpenAI API", "prompt engineering", "tool calling", "structured output", "LangChain", "agent workflows"],
+        items: ["OpenAI API", "DeepSeek", "GLM-4.7", "multi-model adapters", "tool calling", "structured output", "Agent Loop Design (ReAct, tool orchestration)", "Context Engineering"],
       },
       {
         group: "RAG & retrieval",
-        items: ["embeddings", "vector databases", "hybrid retrieval", "rerankers", "RAGAS-style eval"],
+        items: ["embeddings", "Qdrant", "Chroma", "hybrid retrieval", "BM25 / RRF", "rerankers", "RAGAS-style eval"],
       },
       {
         group: "Engineering",
-        items: ["Docker", "GitHub Actions", "logging & error handling", "remote collaboration", "deployment"],
+        items: ["Docker", "GitHub Actions", "logging & error handling", "Vercel", "remote collaboration"],
       },
     ],
     projects: {
@@ -257,10 +261,22 @@ export const CV_DATA: Record<Locale, CVData> = {
     ],
     publications: [
       {
-        title: "Code Review & Debug Agent",
-        org: "Open source · Python · FastAPI · LangChain · MySQL · Redis · Docker",
-        year: "2024 — present",
-        href: "https://github.com/takagibit18",
+        title: "MergeWarden · diff-first context engineering",
+        org: "80-line changed-hunk prefetch cut per-file context 95.1% (75,466 -> 3,691 chars) while preserving golden evidence on pytest #7254 and #9350.",
+        year: "2026",
+        href: "https://github.com/takagibit18/MergeWarden",
+      },
+      {
+        title: "MergeWarden · structured output closure",
+        org: "Force-submit with tool_choice and thinking-disabled submit paths helped R10 reach 50% hit rate, 0% false positives, and 100% schema validity.",
+        year: "2026",
+        href: "https://github.com/takagibit18/MergeWarden",
+      },
+      {
+        title: "shotgunCV · pipeline-first resume ops",
+        org: "Turns one-off resume prompting into a parse -> generate -> score -> rank -> strategy workflow for measurable bulk JD matching decisions.",
+        year: "2026",
+        href: "https://github.com/takagibit18/shotgunCV",
       },
     ],
     contact: {
@@ -379,24 +395,28 @@ export const CV_DATA: Record<Locale, CVData> = {
     about: {
       meta: "个人简介",
       body:
-        "中央民族大学（985）计算机科学与技术本科在读，GPA 3.6。擅长以 Python 做异步与工程化开发，熟悉 FastAPI、Pydantic、pytest、MySQL、Redis；关注 LLM API 接入、Prompt Engineering、Tool Calling、结构化输出、检索质量与 Agent 编排。我的默认工作流是先快速原型，再做链路追踪和评测，最后用 Docker、GitHub Actions 与可 review 的开源协作流程把系统打磨稳定。",
+        "AI Native 开发者，专注可追踪的 Agent、RAG 与 Workflow 系统。我的默认工作流是原型 -> 追踪 -> 评测 -> 打磨：先快速构建，再暴露工具调用与上下文，用评测度量行为，最后通过 Docker、GitHub Actions 和可 review 的流程稳定系统。我也把 LLM Wiki 视为内容操作系统，用来把项目实践沉淀成可复用知识资产。",
     },
     skills: [
       {
         group: "编程与后端",
-        items: ["Python", "FastAPI", "Pydantic", "pytest", "异步编程", "MySQL", "Redis"],
+        items: ["Python", "TypeScript", "FastAPI", "Pydantic", "pytest", "Async I/O / asyncio", "MySQL", "Redis"],
+      },
+      {
+        group: "前端与流式体验",
+        items: ["Next.js", "React", "Vercel AI SDK", "Streaming UI", "Tailwind CSS"],
       },
       {
         group: "LLM 与 Agent",
-        items: ["OpenAI API", "Prompt Engineering", "Tool Calling", "结构化输出", "LangChain", "Agent 编排"],
+        items: ["OpenAI API", "DeepSeek", "GLM-4.7", "多模型适配", "Tool Calling", "结构化输出", "Agent Loop Design (ReAct, tool orchestration)", "上下文工程"],
       },
       {
         group: "RAG 与检索",
-        items: ["Embedding 选型", "向量数据库", "混合检索", "Reranker", "RAGAS 评测"],
+        items: ["Embedding 选型", "Qdrant", "Chroma", "混合检索", "BM25 / RRF", "Reranker", "RAGAS 评测"],
       },
       {
         group: "工程化",
-        items: ["Docker", "GitHub Actions", "日志与错误处理", "远程协作", "部署实践"],
+        items: ["Docker", "GitHub Actions", "日志与错误处理", "Vercel", "远程协作"],
       },
     ],
     projects: {
@@ -434,10 +454,22 @@ export const CV_DATA: Record<Locale, CVData> = {
     ],
     publications: [
       {
-        title: "Code Review & Debug Agent",
-        org: "开源 · Python · FastAPI · LangChain · MySQL · Redis · Docker",
-        year: "2024 — 至今",
-        href: "https://github.com/takagibit18",
+        title: "MergeWarden · diff-first 上下文工程",
+        org: "围绕 changed hunk 的 80 行预读窗口，将单文件上下文减少 95.1%（75,466 -> 3,691 字符），同时保留 pytest #7254 与 #9350 的 golden 证据。",
+        year: "2026",
+        href: "https://github.com/takagibit18/MergeWarden",
+      },
+      {
+        title: "MergeWarden · 结构化输出闭环",
+        org: "通过 tool_choice 与 thinking-disabled submit 路径强制 force-submit，R10 达到 50% hit rate、0% false positives 和 100% schema validity。",
+        year: "2026",
+        href: "https://github.com/takagibit18/MergeWarden",
+      },
+      {
+        title: "shotgunCV · Pipeline-first 简历工作流",
+        org: "把一次性简历提示词改造成解析 -> 生成 -> 评分 -> 排序 -> 策略工作流，让批量 JD 匹配决策变得可度量。",
+        year: "2026",
+        href: "https://github.com/takagibit18/shotgunCV",
       },
     ],
     contact: {
