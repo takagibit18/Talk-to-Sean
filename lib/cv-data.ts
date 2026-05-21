@@ -214,7 +214,7 @@ export const CV_DATA: Record<Locale, CVData> = {
       },
       {
         group: "LLM & agents",
-        items: ["OpenAI API", "DeepSeek", "GLM-4.7", "multi-model adapters", "tool calling", "structured output", "Agent Loop Design (ReAct, tool orchestration)", "Context Engineering"],
+        items: ["OpenAI API", "multi-model adapters", "tool calling", "structured output", "Agent Loop Design (ReAct, tool orchestration)", "Context Engineering"],
       },
       {
         group: "RAG & retrieval",
@@ -408,7 +408,7 @@ export const CV_DATA: Record<Locale, CVData> = {
       },
       {
         group: "LLM 与 Agent",
-        items: ["OpenAI API", "DeepSeek", "GLM-4.7", "多模型适配", "Tool Calling", "结构化输出", "Agent Loop Design (ReAct, tool orchestration)", "上下文工程"],
+        items: ["OpenAI API", "多模型适配", "Tool Calling", "结构化输出", "Agent Loop Design (ReAct, tool orchestration)", "上下文工程"],
       },
       {
         group: "RAG 与检索",

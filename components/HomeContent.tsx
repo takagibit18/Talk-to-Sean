@@ -69,7 +69,7 @@ export default function HomeContent({
           <Languages data={data} />
         </SectionReveal>
         <SectionReveal>
-          <Publications data={data} />
+          <Publications data={data} locale={locale} />
         </SectionReveal>
         <SectionReveal>
           <Contact data={data} talkToSeanUrl={talkToSeanUrl} />
