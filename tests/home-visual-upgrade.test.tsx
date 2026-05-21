@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
 import Skills, { TECH_STACK_ICONS } from "@/components/cv/Skills";
+import MergeWardenFlow from "@/components/motion/MergeWardenFlow";
 import {
   ICON_CLOUD_ROTATION_CONFIG,
   createIconCloudOrbitPoints,
@@ -63,6 +64,47 @@ describe("homepage visual upgrade", () => {
     expect(
       screen.getByRole("img", { name: /technology icon cloud/i }),
     ).toBeInTheDocument();
+  });
+
+  test("MergeWarden flow explains raw PR input through safe merge output", () => {
+    const { container } = render(<MergeWardenFlow locale="en" />);
+
+    expect(
+      screen.getByRole("group", { name: /mergewarden highlight orbit/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Raw PR")).toBeInTheDocument();
+    expect(screen.getByText("MergeWarden")).toBeInTheDocument();
+    expect(screen.getByText("Safe merged PR")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tool Design" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Orchestration" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Failure Degradation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluability" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Context Management" })).toBeInTheDocument();
+    expect(container.querySelectorAll(".mergewarden-flow__orbit-chip-icon")).toHaveLength(5);
+    expect(container.querySelector(".mergewarden-flow__detail-icon")).toBeInTheDocument();
+    expect(container.querySelectorAll(".mergewarden-flow__connector-base")).toHaveLength(2);
+    expect(container.querySelectorAll(".mergewarden-flow__connector-glow")).toHaveLength(2);
+    expect(container.querySelectorAll(".mergewarden-flow__connector-wave")).toHaveLength(4);
+    expect(container.querySelectorAll(".mergewarden-flow__connector-particle")).toHaveLength(4);
+    expect(container.querySelectorAll(".mergewarden-flow__connector-pulse")).toHaveLength(2);
+    expect(
+      [...container.querySelectorAll(".mergewarden-flow__connector-pulse")].map((pulse) => ({
+        cx: pulse.getAttribute("cx"),
+        cy: pulse.getAttribute("cy"),
+      })),
+    ).toEqual([
+      { cx: "304", cy: "112" },
+      { cx: "396", cy: "112" },
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Failure Degradation" }));
+
+    expect(screen.getByRole("button", { name: "Failure Degradation" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByText(/structured errors/)).toBeInTheDocument();
+    expect(screen.getByText(/explicit stop reasons/)).toBeInTheDocument();
   });
 
   test("skills icon cloud items render from logo image assets with glyph fallback only", () => {
