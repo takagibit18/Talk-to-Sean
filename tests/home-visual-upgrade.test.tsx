@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
 import Skills, { TECH_STACK_ICONS } from "@/components/cv/Skills";
 import MergeWardenFlow from "@/components/motion/MergeWardenFlow";
+import SectionTelemetry from "@/components/motion/SectionTelemetry";
 import {
   ICON_CLOUD_ROTATION_CONFIG,
   createIconCloudOrbitPoints,
@@ -66,6 +67,24 @@ describe("homepage visual upgrade", () => {
     ).toBeInTheDocument();
   });
 
+  test("section telemetry exposes compact anchors for the homepage narrative", () => {
+    render(
+      <SectionTelemetry
+        items={[
+          { id: "about", label: "about" },
+          { id: "skills", label: "skills" },
+          { id: "projects", label: "projects" },
+          { id: "activity", label: "activity" },
+          { id: "publications", label: "highlights" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("navigation", { name: "Page section telemetry" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link")).toHaveLength(5);
+    expect(screen.getByRole("link", { name: "projects" })).toHaveAttribute("href", "#projects");
+  });
+
   test("MergeWarden flow explains raw PR input through safe merge output", () => {
     const { container } = render(<MergeWardenFlow locale="en" />);
 
@@ -80,6 +99,8 @@ describe("homepage visual upgrade", () => {
     expect(screen.getByRole("button", { name: "Failure Degradation" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Evaluability" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Context Management" })).toBeInTheDocument();
+    expect(container.querySelector(".mergewarden-flow__hub-copy")).toBeInTheDocument();
+    expect(container.querySelectorAll(".mergewarden-flow__orbit-chip")).toHaveLength(5);
     expect(container.querySelectorAll(".mergewarden-flow__orbit-chip-icon")).toHaveLength(5);
     expect(container.querySelector(".mergewarden-flow__detail-icon")).toBeInTheDocument();
     expect(container.querySelectorAll(".mergewarden-flow__connector-base")).toHaveLength(2);
