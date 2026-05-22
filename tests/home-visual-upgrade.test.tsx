@@ -50,13 +50,19 @@ describe("homepage visual upgrade", () => {
   });
 
   test("hero keeps the public name as a heading while applying the text hover effect", () => {
-    render(<Hero data={CV_DATA.en} talkToSeanUrl="/chat" />);
+    const { container } = render(<Hero data={CV_DATA.en} talkToSeanUrl="/chat" />);
 
     const heading = screen.getByRole("heading", { name: "Sean Yu" });
     const hoverEffect = heading.querySelector("[data-text-hover-effect]");
 
     expect(heading).toBeVisible();
     expect(hoverEffect).toHaveTextContent("Sean Yu");
+    expect(container.querySelector(".cv-agent-step-list")).toBeInTheDocument();
+    expect(container.querySelector(".cv-agent-link-line")).toBeInTheDocument();
+    expect(container.querySelector(".cv-agent-link-pulse")).toBeInTheDocument();
+    expect(container.querySelectorAll(".cv-agent-step-node")).toHaveLength(
+      CV_DATA.en.hero.proofPoints.length,
+    );
   });
 
   test("skills section includes an accessible interactive technology icon cloud", () => {

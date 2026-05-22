@@ -1,5 +1,6 @@
 "use client";
 
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, GitBranch, MessageCircle } from "lucide-react";
 import Image from "next/image";
@@ -18,6 +19,9 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
   const avatarSrc = "/avatar-warm-portrait.png";
   const isExternalChat = talkToSeanUrl ? !talkToSeanUrl.startsWith("/") : false;
   const { hostRef, spotlightRef } = useCursorSpotlight<HTMLElement>();
+  const agentStepListRef = useRef<HTMLDivElement>(null);
+  const agentStepRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [agentLineStyle, setAgentLineStyle] = useState<CSSProperties>({});
 
   const fadeUp = (delay: number) =>
     reducedMotion
@@ -27,6 +31,43 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
           animate: { opacity: 1, y: 0 },
           transition: { duration: 0.7, delay, ease: EASE },
         };
+
+  useEffect(() => {
+    const list = agentStepListRef.current;
+    const firstStep = agentStepRefs.current[0];
+    const lastStep = agentStepRefs.current[data.hero.proofPoints.length - 1];
+    if (!list || !firstStep || !lastStep || typeof window === "undefined") {
+      return undefined;
+    }
+
+    const updateLineBounds = () => {
+      const listRect = list.getBoundingClientRect();
+      const firstRect = firstStep.getBoundingClientRect();
+      const lastRect = lastStep.getBoundingClientRect();
+      const top = firstRect.top - listRect.top + firstRect.height / 2;
+      const bottom = listRect.bottom - (lastRect.top + lastRect.height / 2);
+
+      setAgentLineStyle({
+        "--agent-line-top": `${Math.max(0, top)}px`,
+        "--agent-line-bottom": `${Math.max(0, bottom)}px`,
+      } as CSSProperties);
+    };
+
+    updateLineBounds();
+
+    const observer =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateLineBounds) : null;
+    observer?.observe(list);
+    agentStepRefs.current.forEach((step) => {
+      if (step) observer?.observe(step);
+    });
+    window.addEventListener("resize", updateLineBounds);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateLineBounds);
+    };
+  }, [data.hero.proofPoints.length]);
 
   return (
     <section
@@ -141,9 +182,22 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
                 <GitBranch size={18} className="shrink-0 text-[color:var(--color-accent-strong)]" />
               </div>
 
-              <div className="mt-5 grid gap-3">
-                {data.hero.proofPoints.map((item) => (
-                  <div key={item.label} className="cv-agent-step">
+              <div
+                ref={agentStepListRef}
+                className="cv-agent-step-list mt-5 grid gap-3"
+                style={agentLineStyle}
+              >
+                <span className="cv-agent-link-line" aria-hidden />
+                <span className="cv-agent-link-pulse" aria-hidden />
+                {data.hero.proofPoints.map((item, index) => (
+                  <div
+                    key={item.label}
+                    ref={(node) => {
+                      agentStepRefs.current[index] = node;
+                    }}
+                    className="cv-agent-step"
+                  >
+                    <span className="cv-agent-step-node" aria-hidden />
                     <span className="cv-agent-step-label">{item.label}</span>
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-[color:var(--color-text-strong)]">

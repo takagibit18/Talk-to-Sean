@@ -1291,26 +1291,62 @@ html.light::view-transition-new(root) {
     padding-top: 1.15rem;
   }
 
-  .cv-agent-lab::before {
-    content: "";
-    position: absolute;
-    left: 0.86rem;
-    top: 5.2rem;
-    bottom: 1.2rem;
-    width: 1px;
-    pointer-events: none;
-    background:
-      linear-gradient(180deg, rgba(126, 197, 214, 0), rgba(126, 197, 214, 0.42), rgba(225, 189, 104, 0.22), rgba(126, 197, 214, 0));
-    opacity: 0.68;
-  }
-
   .cv-agent-lab > * {
     position: relative;
     z-index: 1;
   }
 
+  .cv-agent-step-list {
+    --agent-line-top: 1.45rem;
+    --agent-line-bottom: 1.45rem;
+    position: relative;
+  }
+
+  .cv-agent-link-line,
+  .cv-agent-link-pulse {
+    position: absolute;
+    left: 0.62rem;
+    top: var(--agent-line-top);
+    bottom: var(--agent-line-bottom);
+    pointer-events: none;
+  }
+
+  .cv-agent-link-line {
+    z-index: 2;
+    width: 1px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(126, 197, 214, 0.04) 0%,
+        rgba(126, 197, 214, 0.5) 12%,
+        rgba(225, 189, 104, 0.32) 50%,
+        rgba(126, 197, 214, 0.5) 88%,
+        rgba(126, 197, 214, 0.04) 100%
+      );
+    box-shadow:
+      0 0 0 1px rgba(126, 197, 214, 0.05),
+      0 0 16px rgba(126, 197, 214, 0.14);
+    opacity: 0.76;
+  }
+
+  .cv-agent-link-pulse {
+    z-index: 3;
+    width: 0.58rem;
+    transform: translateX(-50%);
+    background:
+      radial-gradient(circle, rgba(244, 234, 216, 0.94) 0 18%, rgba(225, 189, 104, 0.62) 24%, rgba(126, 197, 214, 0.38) 42%, transparent 72%);
+    background-position: 50% -2.6rem;
+    background-repeat: no-repeat;
+    background-size: 0.58rem 2.6rem;
+    filter: drop-shadow(0 0 8px rgba(126, 197, 214, 0.42));
+    mix-blend-mode: screen;
+    opacity: 0;
+    animation: agentTraceRailFlow 3.8s ease-in-out infinite;
+  }
+
   .cv-agent-step {
     position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: 5.5rem 1fr;
     gap: 0.9rem;
@@ -1324,8 +1360,7 @@ html.light::view-transition-new(root) {
     padding: 0.75rem 0.8rem;
   }
 
-  .cv-agent-step::before,
-  .cv-agent-step::after {
+  .cv-agent-step::before {
     content: "";
     position: absolute;
     pointer-events: none;
@@ -1340,7 +1375,8 @@ html.light::view-transition-new(root) {
     animation: agentTraceScan 6.8s var(--ease-swift) infinite;
   }
 
-  .cv-agent-step::after {
+  .cv-agent-step-node {
+    position: absolute;
     left: 0.42rem;
     top: 50%;
     width: 0.4rem;
@@ -1352,20 +1388,35 @@ html.light::view-transition-new(root) {
       0 0 14px rgba(126, 197, 214, 0.22);
     transform: translateY(-50%);
     animation: agentTracePulse 3.4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 4;
   }
 
-  .cv-agent-step > * {
+  .cv-agent-step-node::after {
+    content: "";
+    position: absolute;
+    inset: -0.48rem;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle, rgba(126, 197, 214, 0.2) 0%, rgba(126, 197, 214, 0.08) 42%, transparent 72%);
+    opacity: 0.75;
+    animation: agentTraceHalo 3.4s ease-in-out infinite;
+  }
+
+  .cv-agent-step > :not(.cv-agent-step-node) {
     position: relative;
     z-index: 1;
   }
 
-  .cv-agent-step:nth-child(2)::before,
-  .cv-agent-step:nth-child(2)::after {
+  .cv-agent-step:nth-of-type(2)::before,
+  .cv-agent-step:nth-of-type(2) .cv-agent-step-node,
+  .cv-agent-step:nth-of-type(2) .cv-agent-step-node::after {
     animation-delay: 0.75s;
   }
 
-  .cv-agent-step:nth-child(3)::before,
-  .cv-agent-step:nth-child(3)::after {
+  .cv-agent-step:nth-of-type(3)::before,
+  .cv-agent-step:nth-of-type(3) .cv-agent-step-node,
+  .cv-agent-step:nth-of-type(3) .cv-agent-step-node::after {
     animation-delay: 1.5s;
   }
 
@@ -2137,10 +2188,51 @@ html.light::view-transition-new(root) {
     width: 2.6rem;
     height: 2.6rem;
     place-items: center;
+    padding: 0;
     border: 1px solid rgba(225, 189, 104, 0.16);
     border-radius: 999px;
     background: rgba(201, 154, 62, 0.08);
     color: var(--color-accent-strong);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-swift),
+      background var(--dur-fast) var(--ease-swift),
+      box-shadow var(--dur-fast) var(--ease-swift),
+      color var(--dur-fast) var(--ease-swift),
+      transform var(--dur-fast) var(--ease-swift);
+  }
+
+  .chat-composer-mark svg {
+    transition:
+      filter var(--dur-fast) var(--ease-swift),
+      transform var(--dur-fast) var(--ease-swift);
+  }
+
+  .chat-composer-mark:hover,
+  .chat-composer-mark:focus-visible {
+    border-color: rgba(225, 189, 104, 0.42);
+    background: rgba(201, 154, 62, 0.14);
+    box-shadow:
+      0 0 0 3px rgba(225, 189, 104, 0.08),
+      0 0 20px rgba(225, 189, 104, 0.18);
+    transform: translateY(-1px);
+  }
+
+  .chat-composer-mark:hover svg,
+  .chat-composer-mark:focus-visible svg {
+    filter: drop-shadow(0 0 8px rgba(225, 189, 104, 0.55));
+    transform: rotate(-12deg) scale(1.08);
+  }
+
+  .chat-composer-mark:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+    transform: none;
+  }
+
+  .chat-composer-mark:disabled svg {
+    filter: none;
+    transform: none;
   }
 
   .chat-composer-input {
@@ -2514,9 +2606,25 @@ html.light::view-transition-new(root) {
       rgba(255, 254, 249, 0.7);
   }
 
-  html.light .cv-agent-lab::before {
+  html.light .cv-agent-link-line {
     background:
-      linear-gradient(180deg, rgba(29, 127, 134, 0), rgba(29, 127, 134, 0.36), rgba(182, 111, 29, 0.18), rgba(29, 127, 134, 0));
+      linear-gradient(
+        180deg,
+        rgba(29, 127, 134, 0.03) 0%,
+        rgba(29, 127, 134, 0.42) 12%,
+        rgba(182, 111, 29, 0.28) 50%,
+        rgba(29, 127, 134, 0.42) 88%,
+        rgba(29, 127, 134, 0.03) 100%
+      );
+    box-shadow:
+      0 0 0 1px rgba(29, 127, 134, 0.04),
+      0 0 14px rgba(29, 127, 134, 0.12);
+  }
+
+  html.light .cv-agent-link-pulse {
+    background:
+      radial-gradient(circle, rgba(255, 254, 249, 0.98) 0 18%, rgba(182, 111, 29, 0.48) 24%, rgba(29, 127, 134, 0.34) 42%, transparent 72%);
+    filter: drop-shadow(0 0 8px rgba(29, 127, 134, 0.28));
   }
 
   html.light .cv-agent-step::before {
@@ -2524,11 +2632,16 @@ html.light::view-transition-new(root) {
       linear-gradient(100deg, transparent 0%, rgba(29, 127, 134, 0.08) 32%, rgba(182, 111, 29, 0.11) 48%, transparent 64%);
   }
 
-  html.light .cv-agent-step::after {
+  html.light .cv-agent-step-node {
     background: rgba(29, 127, 134, 0.78);
     box-shadow:
       0 0 0 4px rgba(29, 127, 134, 0.08),
       0 0 14px rgba(29, 127, 134, 0.2);
+  }
+
+  html.light .cv-agent-step-node::after {
+    background:
+      radial-gradient(circle, rgba(29, 127, 134, 0.16) 0%, rgba(29, 127, 134, 0.06) 42%, transparent 72%);
   }
 
   html.light .mergewarden-flow {
@@ -2911,6 +3024,36 @@ html.light::view-transition-new(root) {
   50% {
     opacity: 1;
     transform: translateY(-50%) scale(1.18);
+  }
+}
+
+@keyframes agentTraceHalo {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes agentTraceRailFlow {
+  0% {
+    opacity: 0;
+    background-position: 50% -2.6rem;
+  }
+  18% {
+    opacity: 0.86;
+  }
+  78% {
+    opacity: 0.72;
+    background-position: 50% calc(100% + 2.6rem);
+  }
+  100% {
+    opacity: 0;
+    background-position: 50% calc(100% + 2.6rem);
   }
 }
 
