@@ -137,6 +137,7 @@ export type CVData = {
     characterCount: (remaining: number) => string;
     shiftEnterTooltip: string;
     starterPrompts: string[];
+    magicPrompts: string[];
     errors: Record<string, string>;
   };
   footer: {
@@ -322,6 +323,13 @@ export const CV_DATA: Record<Locale, CVData> = {
         "What kind of LLM systems has Sean built?",
         "Summarize Sean's strongest engineering skills.",
         "How should I evaluate Sean for an agent project?",
+      ],
+      magicPrompts: [
+        "What would Sean ship first on a new AI product team?",
+        "How does Sean keep LLM outputs reliable enough for production?",
+        "Which project best shows Sean's agent orchestration experience?",
+        "What should I ask Sean in a technical interview?",
+        "Where has Sean used evaluation to reduce product risk?",
       ],
       errors: {
         MISSING_API_KEY: "Service not configured yet. Please contact the site owner.",
@@ -514,6 +522,13 @@ export const CV_DATA: Record<Locale, CVData> = {
         "Sean 做过哪些 LLM 系统？",
         "总结 Sean 最强的工程能力。",
         "如何评估 Sean 是否适合 Agent 项目？",
+      ],
+      magicPrompts: [
+        "Sean 加入一个新的 AI 产品团队后会先交付什么？",
+        "Sean 如何把 LLM 输出稳定到可上线的程度？",
+        "哪个项目最能体现 Sean 的 Agent 编排经验？",
+        "技术面试里最应该问 Sean 什么？",
+        "Sean 在哪些地方用评测降低了产品风险？",
       ],
       errors: {
         MISSING_API_KEY: "服务暂未配置。请联系站点所有者。",

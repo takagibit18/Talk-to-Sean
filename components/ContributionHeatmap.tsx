@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import {
+  type PointerEvent as ReactPointerEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import type { ContributionDay } from "@/lib/contributions";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Transition } from "framer-motion";
@@ -27,6 +34,10 @@ const WEEKS = 26;
 const ROWS = 7;
 const HOVER_QUERY = "(hover: hover) and (pointer: fine) and (min-width: 1024px)";
 const LIQUID_RADIUS = 2.15;
+const LIQUID_FAST_RADIUS = 3.85;
+const POINTER_SPEED_THRESHOLD = 0.06;
+const POINTER_FAST_SPEED = 0.88;
+const POINTER_HISTORY_SIZE = 5;
 const WEEK_GRID_WIDTH = `calc(${WEEKS} * var(--hm-cell) + ${WEEKS - 1} * var(--hm-gap))`;
 const LABEL_ROW_WIDTH = `calc(var(--hm-week-grid-offset) + ${WEEKS} * var(--hm-cell) + ${WEEKS - 1} * var(--hm-gap))`;
 const CELL_TRANSITION = {
@@ -50,6 +61,32 @@ interface CellResponse {
   offsetY: number;
 }
 
+interface PointerSample {
+  weekIndex: number;
+  dayIndex: number;
+  time: number;
+}
+
+export interface PointerTrend {
+  directionX: number;
+  directionY: number;
+  speed: number;
+  radius: number;
+  hasMotion: boolean;
+}
+
+const REST_POINTER_TREND: PointerTrend = {
+  directionX: 0,
+  directionY: 0,
+  speed: 0,
+  radius: LIQUID_RADIUS,
+  hasMotion: false,
+};
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
 function getColor(count: number): string {
   if (count === 0) return "var(--hm-level-0)";
   if (count <= 3) return "var(--hm-level-1)";
@@ -70,10 +107,11 @@ function easeOutCubic(progress: number): number {
   return 1 - Math.pow(1 - progress, 3);
 }
 
-function getCellResponse(
+export function getCellResponse(
   activeCell: ActiveCell | null,
   weekIndex: number,
-  dayIndex: number
+  dayIndex: number,
+  pointerTrend: PointerTrend = REST_POINTER_TREND,
 ): CellResponse {
   if (!activeCell) {
     return { energy: 0, offsetX: 0, offsetY: 0 };
@@ -82,29 +120,62 @@ function getCellResponse(
   const deltaX = weekIndex - activeCell.weekIndex;
   const deltaY = dayIndex - activeCell.dayIndex;
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY * 0.9);
-  if (distance > LIQUID_RADIUS) {
+  const radius = clamp(pointerTrend.radius, LIQUID_RADIUS, LIQUID_FAST_RADIUS);
+  if (distance > radius) {
     return { energy: 0, offsetX: 0, offsetY: 0 };
   }
 
-  const energy = Math.pow(1 - distance / LIQUID_RADIUS, 1.55);
-  const offsetBase = energy * 1.05;
+  const motionEnergy = pointerTrend.hasMotion
+    ? clamp(pointerTrend.speed / POINTER_FAST_SPEED, 0, 1)
+    : 0;
+  const radialEnergy = Math.pow(1 - distance / radius, 1.55);
+  if (!pointerTrend.hasMotion || distance === 0) {
+    const offsetBase = radialEnergy * 1.05;
+
+    return {
+      energy: radialEnergy,
+      offsetX: deltaX === 0 ? 0 : Math.sign(deltaX) * offsetBase * 0.46,
+      offsetY: deltaY === 0 ? 0 : Math.sign(deltaY) * offsetBase * 0.38,
+    };
+  }
+
+  const directionX = pointerTrend.directionX;
+  const directionY = pointerTrend.directionY;
+  const distanceSafe = Math.max(distance, 0.001);
+  const lateralFactor = Math.abs(deltaX * directionY - deltaY * directionX) / distanceSafe;
+  const forwardProjection = deltaX * directionX + deltaY * directionY;
+  const sideProjection = deltaX * -directionY + deltaY * directionX;
+  const lateralSign = sideProjection === 0 ? Math.sign(deltaY || deltaX || 1) : Math.sign(sideProjection);
+  const sideX = -directionY * lateralSign;
+  const sideY = directionX * lateralSign;
+  const forwardCompression = clamp(forwardProjection / radius, -1, 1);
+  const directionalEnergy = radialEnergy * (0.74 + lateralFactor * 0.52 + Math.max(0, forwardCompression) * 0.16);
+  const offsetBase = directionalEnergy * (1.08 + motionEnergy * 1.28);
+  const wake = forwardCompression < 0 ? -0.12 * motionEnergy * radialEnergy : 0.16 * motionEnergy * radialEnergy;
 
   return {
-    energy,
-    offsetX: deltaX === 0 ? 0 : Math.sign(deltaX) * offsetBase * 0.46,
-    offsetY: deltaY === 0 ? 0 : Math.sign(deltaY) * offsetBase * 0.38,
+    energy: clamp(directionalEnergy, 0, 1),
+    offsetX: sideX * offsetBase + directionX * wake,
+    offsetY: sideY * offsetBase + directionY * wake,
   };
 }
 
 export default function ContributionHeatmap({ contributions, locale, data }: HeatmapProps) {
   const reducedMotion = useReducedMotion();
-  const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
+  const [trailCell, setTrailCell] = useState<ActiveCell | null>(null);
+  const [pointerTrend, setPointerTrend] = useState<PointerTrend>(REST_POINTER_TREND);
   const [canUseHoverEffect, setCanUseHoverEffect] = useState(false);
   const [hasEnteredPanel, setHasEnteredPanel] = useState(false);
   const [isGridHovered, setIsGridHovered] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
   const [displayTotal, setDisplayTotal] = useState(0);
   const { hostRef, spotlightRef } = useCursorSpotlight<HTMLElement>();
+  const heatmapGridRef = useRef<HTMLDivElement>(null);
+  const pointerSamplesRef = useRef<PointerSample[]>([]);
+  const trailTargetRef = useRef<ActiveCell | null>(null);
+  const trailCellRef = useRef<ActiveCell | null>(null);
+  const trailFrameRef = useRef<number | null>(null);
+  const leaveTimerRef = useRef<number | null>(null);
   const glassFilterId = useId().replace(/:/g, "");
   const t = data.activity;
 
@@ -135,9 +206,160 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
 
   useEffect(() => {
     if (!shouldAnimateHover) {
-      setActiveCell(null);
+      trailCellRef.current = null;
+      trailTargetRef.current = null;
+      pointerSamplesRef.current = [];
+      setTrailCell(null);
+      setPointerTrend(REST_POINTER_TREND);
     }
   }, [shouldAnimateHover]);
+
+  const updateTrailCell = useCallback(() => {
+    const target = trailTargetRef.current;
+    if (!target) {
+      trailFrameRef.current = null;
+      return;
+    }
+
+    const current = trailCellRef.current ?? target;
+    const next = {
+      weekIndex: current.weekIndex + (target.weekIndex - current.weekIndex) * 0.34,
+      dayIndex: current.dayIndex + (target.dayIndex - current.dayIndex) * 0.34,
+    };
+    const distanceToTarget = Math.hypot(
+      target.weekIndex - next.weekIndex,
+      target.dayIndex - next.dayIndex,
+    );
+    const settled = distanceToTarget < 0.018;
+    const nextTrail = settled ? target : next;
+
+    trailCellRef.current = nextTrail;
+    setTrailCell(nextTrail);
+    trailFrameRef.current = settled ? null : window.requestAnimationFrame(updateTrailCell);
+  }, []);
+
+  const requestTrailUpdate = useCallback(() => {
+    if (trailFrameRef.current === null) {
+      trailFrameRef.current = window.requestAnimationFrame(updateTrailCell);
+    }
+  }, [updateTrailCell]);
+
+  const setTrailTarget = useCallback(
+    (point: ActiveCell) => {
+      if (leaveTimerRef.current !== null) {
+        window.clearTimeout(leaveTimerRef.current);
+        leaveTimerRef.current = null;
+      }
+
+      trailTargetRef.current = point;
+      if (!trailCellRef.current) {
+        trailCellRef.current = point;
+        setTrailCell(point);
+        return;
+      }
+
+      requestTrailUpdate();
+    },
+    [requestTrailUpdate],
+  );
+
+  const getPointerGridPoint = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const grid = heatmapGridRef.current;
+    if (!grid) return null;
+
+    const rect = grid.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    return {
+      weekIndex: clamp(((event.clientX - rect.left) / rect.width) * (WEEKS - 1), 0, WEEKS - 1),
+      dayIndex: clamp(((event.clientY - rect.top) / rect.height) * (ROWS - 1), 0, ROWS - 1),
+    };
+  }, []);
+
+  const handleGridPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!shouldAnimateHover) return;
+
+      const point = getPointerGridPoint(event);
+      if (!point) return;
+
+      if (leaveTimerRef.current !== null) {
+        window.clearTimeout(leaveTimerRef.current);
+        leaveTimerRef.current = null;
+      }
+
+      const now = performance.now();
+      pointerSamplesRef.current = [
+        ...pointerSamplesRef.current,
+        { ...point, time: now },
+      ].slice(-POINTER_HISTORY_SIZE);
+
+      const firstSample = pointerSamplesRef.current[0];
+      const elapsed = Math.max(now - firstSample.time, 1);
+      const deltaX = point.weekIndex - firstSample.weekIndex;
+      const deltaY = point.dayIndex - firstSample.dayIndex;
+      const distance = Math.hypot(deltaX, deltaY);
+      const speed = (distance / elapsed) * 16.67;
+      const speedEnergy = clamp(speed / POINTER_FAST_SPEED, 0, 1);
+
+      if (speed > POINTER_SPEED_THRESHOLD && distance > 0.001) {
+        setPointerTrend({
+          directionX: deltaX / distance,
+          directionY: deltaY / distance,
+          speed,
+          radius: LIQUID_RADIUS + (LIQUID_FAST_RADIUS - LIQUID_RADIUS) * speedEnergy,
+          hasMotion: true,
+        });
+      } else {
+        setPointerTrend(REST_POINTER_TREND);
+      }
+
+      setTrailTarget(point);
+    },
+    [getPointerGridPoint, setTrailTarget, shouldAnimateHover],
+  );
+
+  const handleCellPointerEnter = useCallback(
+    (weekIndex: number, dayIndex: number) => {
+      if (!shouldAnimateHover) return;
+
+      setTrailTarget({ weekIndex, dayIndex });
+    },
+    [setTrailTarget, shouldAnimateHover],
+  );
+
+  const handleGridPointerLeave = useCallback(() => {
+    setIsGridHovered(false);
+    pointerSamplesRef.current = [];
+    trailTargetRef.current = null;
+    setPointerTrend(REST_POINTER_TREND);
+
+    if (trailFrameRef.current !== null) {
+      window.cancelAnimationFrame(trailFrameRef.current);
+      trailFrameRef.current = null;
+    }
+
+    if (leaveTimerRef.current !== null) {
+      window.clearTimeout(leaveTimerRef.current);
+    }
+
+    leaveTimerRef.current = window.setTimeout(() => {
+      trailCellRef.current = null;
+      setTrailCell(null);
+      leaveTimerRef.current = null;
+    }, 380);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (trailFrameRef.current !== null) {
+        window.cancelAnimationFrame(trailFrameRef.current);
+      }
+      if (leaveTimerRef.current !== null) {
+        window.clearTimeout(leaveTimerRef.current);
+      }
+    };
+  }, []);
 
   const contributionsSorted = [...contributions].sort((a, b) => a.date.localeCompare(b.date));
   const today = new Date();
@@ -278,10 +500,7 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
             <div
               className="relative flex items-start overflow-hidden"
               onPointerEnter={() => setIsGridHovered(true)}
-              onPointerLeave={() => {
-                setIsGridHovered(false);
-                setActiveCell(null);
-              }}
+              onPointerLeave={handleGridPointerLeave}
             >
               {!reducedMotion && (
                 <div
@@ -308,8 +527,10 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
               </div>
 
               <div
+                ref={heatmapGridRef}
                 className="flex gap-[var(--hm-gap)]"
                 style={{ width: WEEK_GRID_WIDTH }}
+                onPointerMove={shouldAnimateHover ? handleGridPointerMove : undefined}
               >
                 {weeks.map((week, weekIndex) => (
                   <div key={weekIndex} className="flex flex-col gap-[var(--hm-gap)]">
@@ -317,7 +538,7 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
                       const dateStr = date.toISOString().slice(0, 10);
                       const count = countMap.get(dateStr) || 0;
                       const { energy, offsetX, offsetY } = shouldAnimateHover
-                        ? getCellResponse(activeCell, weekIndex, dayIndex)
+                        ? getCellResponse(trailCell, weekIndex, dayIndex, pointerTrend)
                         : { energy: 0, offsetX: 0, offsetY: 0 };
                       const highlightOpacity = energy * 0.52;
                       const blurOpacity = energy * 0.68;
@@ -354,7 +575,7 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
                           }
                           onPointerEnter={
                             shouldAnimateHover
-                              ? () => setActiveCell({ weekIndex, dayIndex })
+                              ? () => handleCellPointerEnter(weekIndex, dayIndex)
                               : undefined
                           }
                           initial={reducedMotion ? false : { opacity: 0, scale: 0.85 }}

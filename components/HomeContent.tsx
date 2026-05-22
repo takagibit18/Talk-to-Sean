@@ -15,6 +15,7 @@ import Contact from "@/components/cv/Contact";
 import Footer from "@/components/cv/Footer";
 import ScrollProgress from "@/components/motion/ScrollProgress";
 import SectionReveal from "@/components/motion/SectionReveal";
+import SectionTelemetry from "@/components/motion/SectionTelemetry";
 import type { GitHubRepo, GitHubUser } from "@/lib/github";
 import type { ContributionDay } from "@/lib/contributions";
 import type { Locale } from "@/lib/locale";
@@ -39,6 +40,19 @@ export default function HomeContent({
   const pathname = usePathname();
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const data = useMemo(() => CV_DATA[locale], [locale]);
+  const telemetrySections = useMemo(
+    () => [
+      { id: "about", label: data.sections.about },
+      { id: "skills", label: data.sections.skills },
+      { id: "projects", label: data.sections.projects },
+      { id: "activity", label: data.sections.activity },
+      { id: "education", label: data.sections.education },
+      { id: "languages", label: data.sections.languages },
+      { id: "publications", label: data.sections.publications },
+      { id: "contact", label: data.sections.contact },
+    ],
+    [data],
+  );
   const handleLocaleChange = (nextLocale: Locale) => {
     setLocale(nextLocale);
     document.cookie = `lang=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
@@ -53,6 +67,7 @@ export default function HomeContent({
       <TopBar user={user} data={data} locale={locale} onLocaleChange={handleLocaleChange} />
 
       <div className="page-grain" aria-hidden />
+      <SectionTelemetry items={telemetrySections} />
 
       <main id="main-content" className="cv-container relative">
         <Hero data={data} talkToSeanUrl={talkToSeanUrl} />

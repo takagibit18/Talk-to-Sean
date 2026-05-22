@@ -74,6 +74,10 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const remaining = MAX_CHARS - input.length;
+  const magicPromptPool = useMemo(
+    () => [...copy.starterPrompts, ...copy.magicPrompts],
+    [copy.magicPrompts, copy.starterPrompts],
+  );
 
   useEffect(() => {
     setIsHydrated(true);
@@ -284,9 +288,27 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
     scrollToBottom("smooth");
   };
 
+  const fillRandomPrompt = () => {
+    if (isSubmitting || magicPromptPool.length === 0) return;
+
+    const pickPrompt = () =>
+      magicPromptPool[Math.floor(Math.random() * magicPromptPool.length)] ?? magicPromptPool[0];
+    let nextPrompt = pickPrompt();
+    if (nextPrompt === input && magicPromptPool.length > 1) {
+      nextPrompt = pickPrompt();
+    }
+
+    setInput(nextPrompt);
+    requestAnimationFrame(() => {
+      resizeTextarea();
+      textareaRef.current?.focus();
+    });
+  };
+
   const homepageHref = locale === "zh" ? "/?lang=zh" : "/";
   const showCharacterCount = remaining <= 200;
   const isEmptyChat = messages.length === 0 && !isSubmitting;
+  const magicPromptLabel = locale === "zh" ? "随机提问" : "Ask a random question";
 
   return (
     <main
@@ -497,9 +519,15 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
               {copy.placeholder}
             </label>
             <div className="chat-composer-shell">
-              <div className="chat-composer-mark" aria-hidden>
+              <button
+                type="button"
+                className="chat-composer-mark focus-ring"
+                aria-label={magicPromptLabel}
+                onClick={fillRandomPrompt}
+                disabled={isSubmitting}
+              >
                 <Sparkles size={20} />
-              </div>
+              </button>
               <textarea
                 id="chat-message"
                 ref={textareaRef}
