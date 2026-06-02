@@ -188,7 +188,8 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
                 style={agentLineStyle}
               >
                 <span className="cv-agent-link-line" aria-hidden />
-                <span className="cv-agent-link-pulse" aria-hidden />
+                <span className="cv-agent-link-flow" aria-hidden />
+                <span className="cv-agent-link-dot" aria-hidden />
                 {data.hero.proofPoints.map((item, index) => (
                   <div
                     key={item.label}

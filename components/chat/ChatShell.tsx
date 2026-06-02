@@ -401,10 +401,10 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                       <motion.article
                         key={message.id}
                         aria-label={`${isUser ? copy.visitor : copy.assistant}: ${message.content}`}
-                        className={`max-w-[88%] rounded-[0.5rem] border p-4 text-sm leading-6 ${
+                        className={`chat-message-bubble max-w-[88%] rounded-[0.5rem] border p-4 text-sm leading-6 ${
                           isUser
-                            ? "ml-auto border-[rgba(201,154,62,0.42)] bg-[rgba(201,154,62,0.16)] text-[color:var(--color-text-strong)]"
-                            : "border-[color:var(--color-border)] bg-[rgba(244,234,216,0.035)]"
+                            ? "chat-message-bubble--user ml-auto"
+                            : "chat-message-bubble--assistant"
                         }`}
                         initial={
                           reducedMotion
@@ -447,7 +447,7 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                     {isWaitingForFirstToken && (
                       <motion.article
                         aria-label={copy.replying}
-                        className="max-w-[88%] rounded-[0.5rem] border border-[color:var(--color-border)] bg-[rgba(244,234,216,0.035)] p-4 text-sm leading-6"
+                        className="chat-message-bubble chat-message-bubble--assistant max-w-[88%] rounded-[0.5rem] border p-4 text-sm leading-6"
                         initial={reducedMotion ? false : { opacity: 0, x: -14 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={reducedMotion ? {} : { opacity: 0, x: -6 }}
@@ -474,7 +474,7 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
               {showNewPill && (
                 <motion.button
                   type="button"
-                  className="focus-ring absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[rgba(225,189,104,0.42)] bg-[rgba(17,16,13,0.92)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-accent-strong)] shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur"
+                  className="chat-new-pill focus-ring absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur"
                   onClick={jumpToNewMessages}
                   initial={reducedMotion ? false : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -499,7 +499,7 @@ export default function ChatShell({ initialLocale }: ChatShellProps) {
                 {lastFailedContent && (
                   <button
                     type="button"
-                    className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-[rgba(244,234,216,0.16)] px-3 py-1 text-xs font-semibold text-[color:var(--color-text-strong)] transition hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
+                    className="chat-retry-button focus-ring inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition"
                     onClick={() => void sendMessage(lastFailedContent, { appendUser: false })}
                     disabled={isSubmitting}
                   >

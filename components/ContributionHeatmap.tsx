@@ -49,6 +49,32 @@ const CELL_TRANSITION = {
 const CELL_ENTER_DURATION = 0.075;
 const CELL_ENTER_MAX_DELAY = 0.46;
 const COUNTER_DURATION_MS = 1050;
+const ACTIVITY_SUMMARY_COPY = {
+  en: {
+    eyebrow: "Recent Activity",
+    title: "Build Rhythm",
+    metrics: [
+      { label: "6-month signal", value: "contributions" },
+      { label: "Build cadence", value: "steady shipping" },
+      { label: "Focus", value: "Agent / LLM Workflow / Frontend" },
+    ],
+    note:
+      "Not a one-time burst, but a visible trail where learning, project work, and reusable notes keep compressing into shippable systems.",
+    flow: ["Learn", "Build", "Ship"],
+  },
+  zh: {
+    eyebrow: "活跃摘要",
+    title: "构建节奏",
+    metrics: [
+      { label: "半年贡献", value: "次贡献" },
+      { label: "连续构建", value: "稳定推进" },
+      { label: "高频方向", value: "Agent / LLM Workflow / Frontend" },
+    ],
+    note:
+      "不是一次性爆发，而是持续把学习、项目和内容资产沉淀到可见轨迹里。",
+    flow: ["Learn", "Build", "Ship"],
+  },
+} as const;
 
 interface ActiveCell {
   weekIndex: number;
@@ -404,6 +430,16 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
     0
   );
   const animatedTotal = reducedMotion || !hasEnteredPanel ? totalContributions : displayTotal;
+  const summary = ACTIVITY_SUMMARY_COPY[locale];
+  const summaryMetrics = summary.metrics.map((metric, index) => ({
+    ...metric,
+    value:
+      index === 0
+        ? locale === "zh"
+          ? `${animatedTotal.toLocaleString()} ${metric.value}`
+          : animatedTotal.toLocaleString()
+        : metric.value,
+  }));
 
   useEffect(() => {
     if (reducedMotion || !hasEnteredPanel) {
@@ -450,222 +486,245 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
         onViewportEnter={() => setHasEnteredPanel(true)}
         transition={{ duration: 0.95, ease: [0.22, 0.68, 0.2, 1] }}
       >
-        <p className="cv-heading-lg mb-8" suppressHydrationWarning>
-          {t.total(animatedTotal.toLocaleString())}
-        </p>
+        <div className="cv-heatmap-layout">
+          <div className="cv-heatmap-main">
+            <p className="cv-heading-lg mb-8" suppressHydrationWarning>
+              {t.total(animatedTotal.toLocaleString())}
+            </p>
 
-        <div className="overflow-x-auto pb-1">
-          <div className="relative inline-block w-max">
-            <svg
-              aria-hidden="true"
-              className="pointer-events-none absolute h-0 w-0 overflow-hidden"
-              focusable="false"
-            >
-              <defs>
-                <filter
-                  id={glassFilterId}
-                  x="-80%"
-                  y="-80%"
-                  width="260%"
-                  height="260%"
-                  colorInterpolationFilters="sRGB"
-                >
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="0.85" result="softGlow" />
-                  <feColorMatrix
-                    in="softGlow"
-                    type="matrix"
-                    values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1.45 -0.16"
-                    result="glassGlow"
-                  />
-                  <feBlend in="SourceGraphic" in2="glassGlow" mode="screen" result="blended" />
-                  <feGaussianBlur in="blended" stdDeviation="0.28" />
-                </filter>
-              </defs>
-            </svg>
-
-            <div className="relative mb-1" style={{ height: "var(--hm-month-label-height)", width: LABEL_ROW_WIDTH }}>
-              {monthLabels.map(({ week, label }, index) => (
-                <span
-                  key={index}
-                  className="hm-label absolute top-0 text-[10px] leading-none"
-                  style={{
-                    left: getMonthLabelLeft(week),
-                  }}
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-
-            <div
-              className="relative flex items-start overflow-hidden"
-              onPointerEnter={() => setIsGridHovered(true)}
-              onPointerLeave={handleGridPointerLeave}
-            >
-              {!reducedMotion && (
-                <div
+            <div className="overflow-x-auto pb-1">
+              <div className="relative inline-block w-max">
+                <svg
                   aria-hidden="true"
-                  className="heatmap-shimmer"
-                  style={{
-                    left: "var(--hm-week-grid-offset)",
-                    width: WEEK_GRID_WIDTH,
-                    animationPlayState: isGridHovered ? "paused" : "running",
-                  }}
-                />
-              )}
+                  className="pointer-events-none absolute h-0 w-0 overflow-hidden"
+                  focusable="false"
+                >
+                  <defs>
+                    <filter
+                      id={glassFilterId}
+                      x="-80%"
+                      y="-80%"
+                      width="260%"
+                      height="260%"
+                      colorInterpolationFilters="sRGB"
+                    >
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="0.85" result="softGlow" />
+                      <feColorMatrix
+                        in="softGlow"
+                        type="matrix"
+                        values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1.45 -0.16"
+                        result="glassGlow"
+                      />
+                      <feBlend in="SourceGraphic" in2="glassGlow" mode="screen" result="blended" />
+                      <feGaussianBlur in="blended" stdDeviation="0.28" />
+                    </filter>
+                  </defs>
+                </svg>
 
-              <div className="mr-[var(--hm-gap)] flex w-[var(--hm-day-label-width)] flex-col gap-[var(--hm-gap)]">
-                {Array.from({ length: ROWS }, (_, rowIndex) => (
-                  <div
-                    key={rowIndex}
-                    className="hm-label text-[10px] leading-none"
-                    style={{ height: "var(--hm-cell)" }}
-                  >
-                    {rowIndex < 6 && rowIndex % 2 === 0 ? DAYS[locale][rowIndex / 2] : ""}
-                  </div>
-                ))}
-              </div>
+                <div className="relative mb-1" style={{ height: "var(--hm-month-label-height)", width: LABEL_ROW_WIDTH }}>
+                  {monthLabels.map(({ week, label }, index) => (
+                    <span
+                      key={index}
+                      className="hm-label absolute top-0 text-[10px] leading-none"
+                      style={{
+                        left: getMonthLabelLeft(week),
+                      }}
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
 
-              <div
-                ref={heatmapGridRef}
-                className="flex gap-[var(--hm-gap)]"
-                style={{ width: WEEK_GRID_WIDTH }}
-                onPointerMove={shouldAnimateHover ? handleGridPointerMove : undefined}
-              >
-                {weeks.map((week, weekIndex) => (
-                  <div key={weekIndex} className="flex flex-col gap-[var(--hm-gap)]">
-                    {week.map((date, dayIndex) => {
-                      const dateStr = date.toISOString().slice(0, 10);
-                      const count = countMap.get(dateStr) || 0;
-                      const { energy, offsetX, offsetY } = shouldAnimateHover
-                        ? getCellResponse(trailCell, weekIndex, dayIndex, pointerTrend)
-                        : { energy: 0, offsetX: 0, offsetY: 0 };
-                      const highlightOpacity = energy * 0.52;
-                      const blurOpacity = energy * 0.68;
-                      const zIndex = energy > 0 ? 2 + Math.round(energy * 10) : 1;
-                      const revealDelay = getCellRevealDelay(weekIndex, dayIndex);
-                      const cellTransition: Transition = isRevealing
-                        ? {
-                            opacity: {
-                              duration: CELL_ENTER_DURATION,
-                              delay: revealDelay,
-                              ease: "easeOut" as const,
-                            },
-                            scale: {
-                              type: "spring" as const,
-                              stiffness: 520,
-                              damping: 24,
-                              mass: 0.38,
-                              delay: revealDelay,
-                            },
-                            x: CELL_TRANSITION,
-                            y: CELL_TRANSITION,
-                            boxShadow: CELL_TRANSITION,
-                          }
-                        : CELL_TRANSITION;
-
-                      return (
-                        <motion.div
-                          key={dateStr}
-                          className="relative rounded-[2px] will-change-transform"
-                          title={
-                            locale === "zh"
-                              ? `${dateStr} 有 ${count} 次贡献`
-                              : `${count} contributions on ${dateStr}`
-                          }
-                          onPointerEnter={
-                            shouldAnimateHover
-                              ? () => handleCellPointerEnter(weekIndex, dayIndex)
-                              : undefined
-                          }
-                          initial={reducedMotion ? false : { opacity: 0, scale: 0.85 }}
-                          animate={{
-                            opacity: 1,
-                            scale: 1 + energy * 0.13,
-                            x: offsetX,
-                            y: offsetY,
-                            boxShadow:
-                              energy > 0
-                                ? `0 0 0 1px rgba(244, 234, 216, ${0.08 + energy * 0.18}), 0 ${1 + energy * 3}px ${2 + energy * 8}px rgba(234, 201, 119, ${energy * 0.18})`
-                                : "0 0 0 0 rgba(0, 0, 0, 0)",
-                          }}
-                          transition={cellTransition}
-                          style={{
-                            width: "var(--hm-cell)",
-                            height: "var(--hm-cell)",
-                            backgroundColor: getColor(count),
-                            zIndex,
-                          }}
-                        >
-                          <motion.div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-0 rounded-[inherit]"
-                            animate={{
-                              opacity: energy * 0.18,
-                            }}
-                            transition={CELL_TRANSITION}
-                            style={{
-                              background:
-                                "linear-gradient(180deg, var(--hm-liquid-edge) 0%, rgba(255,255,255,0) 70%)",
-                            }}
-                          />
-
-                          <motion.div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute -inset-px rounded-[inherit]"
-                            animate={{
-                              opacity: blurOpacity,
-                              scale: 1 + energy * 0.12,
-                              x: -offsetX * 0.7,
-                              y: -offsetY * 0.7,
-                            }}
-                            transition={CELL_TRANSITION}
-                            style={{
-                              background:
-                                "radial-gradient(circle at 30% 30%, var(--hm-liquid-highlight) 0%, var(--hm-liquid-glow) 38%, rgba(255,255,255,0) 74%)",
-                              filter: `url(#${glassFilterId})`,
-                            }}
-                          />
-
-                          <motion.div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-0 rounded-[inherit] mix-blend-screen"
-                            animate={{
-                              opacity: highlightOpacity,
-                              x: -offsetX * 1.15,
-                              y: -offsetY * 1.15,
-                              scale: 1 + energy * 0.06,
-                            }}
-                            transition={CELL_TRANSITION}
-                            style={{
-                              background:
-                                "linear-gradient(135deg, rgba(255,255,255,0.64) 0%, rgba(255,255,255,0.14) 44%, rgba(255,255,255,0) 76%)",
-                            }}
-                          />
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="hm-label mt-4 flex items-center justify-end gap-1.5 text-[10px]">
-              <span>{t.less}</span>
-              {[0, 1, 4, 8, 13].map((value) => (
                 <div
-                  key={value}
-                  className="rounded-[2px]"
-                  style={{
-                    width: "calc(var(--hm-cell) - 1px)",
-                    height: "calc(var(--hm-cell) - 1px)",
-                    backgroundColor: getColor(value),
-                  }}
-                />
-              ))}
-              <span>{t.more}</span>
+                  className="relative flex items-start overflow-hidden"
+                  onPointerEnter={() => setIsGridHovered(true)}
+                  onPointerLeave={handleGridPointerLeave}
+                >
+                  {!reducedMotion && (
+                    <div
+                      aria-hidden="true"
+                      className="heatmap-shimmer"
+                      style={{
+                        left: "var(--hm-week-grid-offset)",
+                        width: WEEK_GRID_WIDTH,
+                        animationPlayState: isGridHovered ? "paused" : "running",
+                      }}
+                    />
+                  )}
+
+                  <div className="mr-[var(--hm-gap)] flex w-[var(--hm-day-label-width)] flex-col gap-[var(--hm-gap)]">
+                    {Array.from({ length: ROWS }, (_, rowIndex) => (
+                      <div
+                        key={rowIndex}
+                        className="hm-label text-[10px] leading-none"
+                        style={{ height: "var(--hm-cell)" }}
+                      >
+                        {rowIndex < 6 && rowIndex % 2 === 0 ? DAYS[locale][rowIndex / 2] : ""}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    ref={heatmapGridRef}
+                    className="flex gap-[var(--hm-gap)]"
+                    style={{ width: WEEK_GRID_WIDTH }}
+                    onPointerMove={shouldAnimateHover ? handleGridPointerMove : undefined}
+                  >
+                    {weeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className="flex flex-col gap-[var(--hm-gap)]">
+                        {week.map((date, dayIndex) => {
+                          const dateStr = date.toISOString().slice(0, 10);
+                          const count = countMap.get(dateStr) || 0;
+                          const { energy, offsetX, offsetY } = shouldAnimateHover
+                            ? getCellResponse(trailCell, weekIndex, dayIndex, pointerTrend)
+                            : { energy: 0, offsetX: 0, offsetY: 0 };
+                          const highlightOpacity = energy * 0.52;
+                          const blurOpacity = energy * 0.68;
+                          const zIndex = energy > 0 ? 2 + Math.round(energy * 10) : 1;
+                          const revealDelay = getCellRevealDelay(weekIndex, dayIndex);
+                          const cellTransition: Transition = isRevealing
+                            ? {
+                                opacity: {
+                                  duration: CELL_ENTER_DURATION,
+                                  delay: revealDelay,
+                                  ease: "easeOut" as const,
+                                },
+                                scale: {
+                                  type: "spring" as const,
+                                  stiffness: 520,
+                                  damping: 24,
+                                  mass: 0.38,
+                                  delay: revealDelay,
+                                },
+                                x: CELL_TRANSITION,
+                                y: CELL_TRANSITION,
+                                boxShadow: CELL_TRANSITION,
+                              }
+                            : CELL_TRANSITION;
+
+                          return (
+                            <motion.div
+                              key={dateStr}
+                              className="relative rounded-[2px] will-change-transform"
+                              title={
+                                locale === "zh"
+                                  ? `${dateStr} 有 ${count} 次贡献`
+                                  : `${count} contributions on ${dateStr}`
+                              }
+                              onPointerEnter={
+                                shouldAnimateHover
+                                  ? () => handleCellPointerEnter(weekIndex, dayIndex)
+                                  : undefined
+                              }
+                              initial={reducedMotion ? false : { opacity: 0, scale: 0.85 }}
+                              animate={{
+                                opacity: 1,
+                                scale: 1 + energy * 0.13,
+                                x: offsetX,
+                                y: offsetY,
+                                boxShadow:
+                                  energy > 0
+                                    ? `0 0 0 1px rgba(244, 234, 216, ${0.08 + energy * 0.18}), 0 ${1 + energy * 3}px ${2 + energy * 8}px rgba(234, 201, 119, ${energy * 0.18})`
+                                    : "0 0 0 0 rgba(0, 0, 0, 0)",
+                              }}
+                              transition={cellTransition}
+                              style={{
+                                width: "var(--hm-cell)",
+                                height: "var(--hm-cell)",
+                                backgroundColor: getColor(count),
+                                zIndex,
+                              }}
+                            >
+                              <motion.div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 rounded-[inherit]"
+                                animate={{
+                                  opacity: energy * 0.18,
+                                }}
+                                transition={CELL_TRANSITION}
+                                style={{
+                                  background:
+                                    "linear-gradient(180deg, var(--hm-liquid-edge) 0%, rgba(255,255,255,0) 70%)",
+                                }}
+                              />
+
+                              <motion.div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -inset-px rounded-[inherit]"
+                                animate={{
+                                  opacity: blurOpacity,
+                                  scale: 1 + energy * 0.12,
+                                  x: -offsetX * 0.7,
+                                  y: -offsetY * 0.7,
+                                }}
+                                transition={CELL_TRANSITION}
+                                style={{
+                                  background:
+                                    "radial-gradient(circle at 30% 30%, var(--hm-liquid-highlight) 0%, var(--hm-liquid-glow) 38%, rgba(255,255,255,0) 74%)",
+                                  filter: `url(#${glassFilterId})`,
+                                }}
+                              />
+
+                              <motion.div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 rounded-[inherit] mix-blend-screen"
+                                animate={{
+                                  opacity: highlightOpacity,
+                                  x: -offsetX * 1.15,
+                                  y: -offsetY * 1.15,
+                                  scale: 1 + energy * 0.06,
+                                }}
+                                transition={CELL_TRANSITION}
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, rgba(255,255,255,0.64) 0%, rgba(255,255,255,0.14) 44%, rgba(255,255,255,0) 76%)",
+                                }}
+                              />
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="hm-label mt-4 flex items-center justify-end gap-1.5 text-[10px]">
+                  <span>{t.less}</span>
+                  {[0, 1, 4, 8, 13].map((value) => (
+                    <div
+                      key={value}
+                      className="rounded-[2px]"
+                      style={{
+                        width: "calc(var(--hm-cell) - 1px)",
+                        height: "calc(var(--hm-cell) - 1px)",
+                        backgroundColor: getColor(value),
+                      }}
+                    />
+                  ))}
+                  <span>{t.more}</span>
+                </div>
+              </div>
             </div>
           </div>
+
+          <aside className="cv-activity-summary" aria-label={summary.title}>
+            <span className="cv-activity-eyebrow">{summary.eyebrow}</span>
+            <h3>{summary.title}</h3>
+            <dl className="cv-activity-metrics">
+              {summaryMetrics.map((metric) => (
+                <div key={metric.label} className="cv-activity-metric">
+                  <dt>{metric.label}</dt>
+                  <dd suppressHydrationWarning>{metric.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="cv-activity-note">{summary.note}</p>
+            <ol className="cv-activity-flow" aria-label={locale === "zh" ? "构建状态流" : "Build status flow"}>
+              {summary.flow.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          </aside>
         </div>
       </motion.div>
     </section>
