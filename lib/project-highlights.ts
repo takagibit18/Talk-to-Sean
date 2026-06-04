@@ -38,7 +38,7 @@ export const FEATURED_PROJECTS: FeaturedProject[] = [
   },
   {
     title: "MergeWarden",
-    href: "https://github.com/takagibit18/MergeWarden",
+    href: "https://merge-warden.vercel.app/",
     language: "Python",
     repoAliases: ["mergewarden", "review-debug-agent", "debug-agent"],
     description: {
