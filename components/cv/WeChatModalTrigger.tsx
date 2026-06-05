@@ -12,6 +12,7 @@ export interface WeChatModalTriggerProps {
   modalCopyFailed: string;
   modalClose: string;
   modalQrAlt: string;
+  showQrCode?: boolean;
 }
 
 export default function WeChatModalTrigger({
@@ -22,6 +23,7 @@ export default function WeChatModalTrigger({
   modalCopyFailed,
   modalClose,
   modalQrAlt,
+  showQrCode = true,
 }: WeChatModalTriggerProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -92,7 +94,7 @@ export default function WeChatModalTrigger({
 
   const openModal = () => {
     setCopyStatus("idle");
-    setShowQr(true);
+    setShowQr(showQrCode);
     setOpen(true);
   };
 
@@ -146,7 +148,7 @@ export default function WeChatModalTrigger({
                 </p>
               )}
 
-              {showQr && (
+              {showQrCode && showQr && (
                 <div className="mt-6 border-t border-[color:var(--color-border)] pt-6">
                   {/* Place `public/wechat-qr.png`; on 404 the image hides automatically. */}
                   <img

@@ -76,7 +76,7 @@ export default function RepoGrid({ repos, locale, data }: RepoGridProps) {
                 className="cv-feature-card cv-case-card focus-ring group h-full content-between"
               >
                 <div>
-                  <div className="mb-8 flex items-start justify-between gap-4">
+                  <div className="mb-5 flex items-start justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <span className="cv-feature-meta">
                         {(repo?.language || project.language) && (
@@ -113,7 +113,7 @@ export default function RepoGrid({ repos, locale, data }: RepoGridProps) {
                     {project.description[locale] || t.noDescription}
                   </p>
 
-                  <dl className="mt-7 grid gap-4">
+                  <dl className="mt-5 grid gap-3">
                     <div className="cv-case-row">
                       <dt>{t.problemLabel}</dt>
                       <dd>{project.problem[locale]}</dd>
@@ -134,7 +134,7 @@ export default function RepoGrid({ repos, locale, data }: RepoGridProps) {
                     </div>
                   </dl>
 
-                  <div className="mt-6 flex flex-wrap gap-2" aria-label={t.stackLabel}>
+                  <div className="mt-5 flex flex-wrap gap-2" aria-label={t.stackLabel}>
                     {project.stack.map((item) => (
                       <span key={item} className="cv-mini-chip">
                         {item}
@@ -143,7 +143,7 @@ export default function RepoGrid({ repos, locale, data }: RepoGridProps) {
                   </div>
                 </div>
 
-                <div className="mt-8 flex items-center justify-between gap-4 border-t border-[rgba(244,234,216,0.08)] pt-4">
+                <div className="mt-6 flex items-center justify-between gap-4 border-t border-[rgba(244,234,216,0.08)] pt-4">
                   <div className="flex items-center gap-5 text-xs text-[color:var(--color-text-muted)]">
                     <span className="inline-flex items-center gap-1.5">
                       <Star size={12} />
