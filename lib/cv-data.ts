@@ -265,13 +265,13 @@ export const CV_DATA: Record<Locale, CVData> = {
         title: "MergeWarden · diff-first context engineering",
         org: "80-line changed-hunk prefetch cut per-file context 95.1% (75,466 -> 3,691 chars) while preserving golden evidence on pytest #7254 and #9350.",
         year: "2026",
-        href: "https://github.com/takagibit18/MergeWarden",
+        href: "https://merge-warden.vercel.app/",
       },
       {
         title: "MergeWarden · structured output closure",
         org: "Force-submit with tool_choice and thinking-disabled submit paths helped R10 reach 50% hit rate, 0% false positives, and 100% schema validity.",
         year: "2026",
-        href: "https://github.com/takagibit18/MergeWarden",
+        href: "https://merge-warden.vercel.app/",
       },
       {
         title: "shotgunCV · pipeline-first resume ops",
@@ -465,7 +465,7 @@ export const CV_DATA: Record<Locale, CVData> = {
         title: "MergeWarden · diff-first 上下文工程",
         org: "围绕 changed hunk 的 80 行预读窗口，将单文件上下文减少 95.1%（75,466 -> 3,691 字符），同时保留 pytest #7254 与 #9350 的 golden 证据。",
         year: "2026",
-        href: "https://github.com/takagibit18/MergeWarden",
+        href: "https://merge-warden.vercel.app/",
       },
       {
         title: "MergeWarden · 结构化输出闭环",

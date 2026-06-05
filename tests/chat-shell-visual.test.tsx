@@ -70,4 +70,30 @@ describe("ChatShell visual layer", () => {
       expect(screen.getByRole("button", { name: "Ask a random question" })).toBeDisabled(),
     );
   });
+
+  it("uses theme-aware message classes for visitor and assistant bubbles", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ message: "Sean builds RAG and agent systems." }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+    render(<ChatShell initialLocale="en" />);
+
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "What has Sean built?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByLabelText("Visitor: What has Sean built?")).toHaveClass(
+      "chat-message-bubble",
+      "chat-message-bubble--user",
+    );
+    expect(await screen.findByLabelText("Sean AI: Sean builds RAG and agent systems.")).toHaveClass(
+      "chat-message-bubble",
+      "chat-message-bubble--assistant",
+    );
+  });
 });

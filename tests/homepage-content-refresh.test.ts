@@ -86,7 +86,7 @@ describe("homepage content refresh", () => {
     expect(CV_DATA.zh.publications).toHaveLength(3);
 
     expect(CV_DATA.en.publications.map((item) => item.href)).toEqual(
-      expect.arrayContaining(["https://github.com/takagibit18/MergeWarden", "https://github.com/takagibit18/shotgunCV"]),
+      expect.arrayContaining(["https://merge-warden.vercel.app/", "https://github.com/takagibit18/shotgunCV"]),
     );
     expect(CV_DATA.en.publications.map((item) => item.org).join(" ")).toContain("95.1%");
     expect(CV_DATA.en.publications.map((item) => item.org).join(" ")).toContain("50%");

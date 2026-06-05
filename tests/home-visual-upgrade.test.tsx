@@ -3,8 +3,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
 import Skills, { TECH_STACK_ICONS } from "@/components/cv/Skills";
+import ContributionHeatmap from "@/components/ContributionHeatmap";
 import MergeWardenFlow from "@/components/motion/MergeWardenFlow";
-import SectionTelemetry from "@/components/motion/SectionTelemetry";
+import SectionTelemetry, { getTelemetryNodeMotion } from "@/components/motion/SectionTelemetry";
 import {
   ICON_CLOUD_ROTATION_CONFIG,
   createIconCloudOrbitPoints,
@@ -59,7 +60,8 @@ describe("homepage visual upgrade", () => {
     expect(hoverEffect).toHaveTextContent("Sean Yu");
     expect(container.querySelector(".cv-agent-step-list")).toBeInTheDocument();
     expect(container.querySelector(".cv-agent-link-line")).toBeInTheDocument();
-    expect(container.querySelector(".cv-agent-link-pulse")).toBeInTheDocument();
+    expect(container.querySelector(".cv-agent-link-flow")).toBeInTheDocument();
+    expect(container.querySelector(".cv-agent-link-dot")).toBeInTheDocument();
     expect(container.querySelectorAll(".cv-agent-step-node")).toHaveLength(
       CV_DATA.en.hero.proofPoints.length,
     );
@@ -73,8 +75,29 @@ describe("homepage visual upgrade", () => {
     ).toBeInTheDocument();
   });
 
-  test("section telemetry exposes compact anchors for the homepage narrative", () => {
+  test("activity section balances the GitHub heatmap with build rhythm context", () => {
+    const today = new Date().toISOString().slice(0, 10);
     render(
+      <ContributionHeatmap
+        contributions={[
+          { date: today, count: 8 },
+          { date: "2026-05-01", count: 4 },
+        ]}
+        locale="en"
+        data={CV_DATA.en}
+      />,
+    );
+
+    expect(screen.getByText("Build Rhythm")).toBeInTheDocument();
+    expect(screen.getByText("Recent Activity")).toBeInTheDocument();
+    expect(screen.getByText("Agent / LLM Workflow / Frontend")).toBeInTheDocument();
+    expect(screen.getByText("Learn")).toBeInTheDocument();
+    expect(screen.getByText("Build")).toBeInTheDocument();
+    expect(screen.getByText("Ship")).toBeInTheDocument();
+  });
+
+  test("section telemetry exposes compact anchors with scroll-mapped dot morphing", () => {
+    const { container } = render(
       <SectionTelemetry
         items={[
           { id: "about", label: "about" },
@@ -89,6 +112,32 @@ describe("homepage visual upgrade", () => {
     expect(screen.getByRole("navigation", { name: "Page section telemetry" })).toBeInTheDocument();
     expect(screen.getAllByRole("link")).toHaveLength(5);
     expect(screen.getByRole("link", { name: "projects" })).toHaveAttribute("href", "#projects");
+    expect(container.querySelector(".section-telemetry__rail")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "projects" }).style.getPropertyValue("--telemetry-node-scale-y"),
+    ).toBe("1");
+  });
+
+  test("telemetry node motion stretches the current dot and compresses the next dot mid-scroll", () => {
+    const current = getTelemetryNodeMotion({
+      index: 1,
+      activeIndex: 1,
+      progress: 0.5,
+      direction: 1,
+      total: 5,
+    });
+    const next = getTelemetryNodeMotion({
+      index: 2,
+      activeIndex: 1,
+      progress: 0.5,
+      direction: 1,
+      total: 5,
+    });
+
+    expect(current.scaleY).toBeGreaterThanOrEqual(1.4);
+    expect(current.scaleX).toBeLessThan(1);
+    expect(next.scaleY).toBeLessThanOrEqual(0.9);
+    expect(next.scaleX).toBeGreaterThan(1);
   });
 
   test("MergeWarden flow explains raw PR input through safe merge output", () => {
