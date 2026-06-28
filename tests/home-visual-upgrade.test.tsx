@@ -118,7 +118,7 @@ describe("homepage visual upgrade", () => {
     ).toBe("1");
   });
 
-  test("telemetry node motion stretches the current dot and compresses the next dot mid-scroll", () => {
+  test("telemetry node motion keeps dot geometry stable mid-scroll", () => {
     const current = getTelemetryNodeMotion({
       index: 1,
       activeIndex: 1,
@@ -134,10 +134,11 @@ describe("homepage visual upgrade", () => {
       total: 5,
     });
 
-    expect(current.scaleY).toBeGreaterThanOrEqual(1.4);
-    expect(current.scaleX).toBeLessThan(1);
-    expect(next.scaleY).toBeLessThanOrEqual(0.9);
-    expect(next.scaleX).toBeGreaterThan(1);
+    expect(current.scaleY).toBe(1);
+    expect(current.scaleX).toBe(1);
+    expect(next.scaleY).toBe(1);
+    expect(next.scaleX).toBe(1);
+    expect(current.opacity).toBeGreaterThan(next.opacity);
   });
 
   test("MergeWarden flow explains raw PR input through safe merge output", () => {

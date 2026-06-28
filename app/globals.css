@@ -529,6 +529,32 @@ html.light::view-transition-new(root) {
     color: var(--color-accent-strong);
   }
 
+  .cv-hero-signal-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin: 0.15rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cv-hero-signal-list li {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    border: 1px solid rgba(126, 197, 214, 0.18);
+    border-radius: var(--radius-pill);
+    background:
+      linear-gradient(135deg, rgba(76, 142, 168, 0.12), rgba(201, 154, 62, 0.055)),
+      rgba(244, 234, 216, 0.025);
+    color: rgba(222, 239, 242, 0.9);
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+  }
+
   .cv-chip {
     display: inline-flex;
     align-items: center;
@@ -756,15 +782,15 @@ html.light::view-transition-new(root) {
   }
 
   .cv-case-card {
-    min-height: 28rem;
+    min-height: 23.5rem;
   }
 
   .cv-case-row {
     position: relative;
     display: grid;
-    gap: 0.45rem;
+    gap: 0.36rem;
     border-top: 1px solid rgba(244, 234, 216, 0.07);
-    padding-top: 0.95rem;
+    padding-top: 0.78rem;
   }
 
   .cv-case-row::before {
@@ -798,8 +824,8 @@ html.light::view-transition-new(root) {
   .cv-case-row dd {
     margin: 0;
     color: rgba(216, 207, 190, 0.86);
-    font-size: 0.88rem;
-    line-height: 1.68;
+    font-size: 0.84rem;
+    line-height: 1.58;
   }
 
   .cv-mini-chip {
@@ -836,11 +862,11 @@ html.light::view-transition-new(root) {
   }
 
   .cv-feature-desc {
-    margin-top: 1rem;
-    max-width: 58ch;
+    margin-top: 0.85rem;
+    max-width: 50ch;
     color: rgba(216, 207, 190, 0.92);
-    font-size: 0.98rem;
-    line-height: 1.78;
+    font-size: 0.94rem;
+    line-height: 1.62;
   }
 
   .cv-skill-cluster {
@@ -1076,10 +1102,7 @@ html.light::view-transition-new(root) {
     box-shadow:
       0 0 0 1px color-mix(in srgb, rgba(225, 189, 104, 0.74) calc(var(--telemetry-node-focus, 0) * 100%), rgba(244, 234, 216, 0.18)),
       0 0 calc(16px * var(--telemetry-node-focus, 0)) rgba(225, 189, 104, 0.28);
-    transform:
-      translateY(var(--telemetry-node-shift-y, 0px))
-      scaleX(var(--telemetry-node-scale-x, 1))
-      scaleY(var(--telemetry-node-scale-y, 1));
+    transform: translateY(var(--telemetry-node-shift-y, 0px));
     transform-origin: center;
     transition:
       background var(--dur-fast) var(--ease-swift),
@@ -1125,6 +1148,16 @@ html.light::view-transition-new(root) {
   .section-telemetry__node:focus-visible::after {
     opacity: 1;
     transform: translate(0, -50%);
+  }
+
+  .section-telemetry__node[aria-current="location"]::after {
+    opacity: 0.68;
+    transform: translate(0, -50%);
+  }
+
+  .section-telemetry__node[aria-current="location"]:hover::after,
+  .section-telemetry__node[aria-current="location"]:focus-visible::after {
+    opacity: 1;
   }
 
   @media (min-width: 1320px) {
@@ -1236,6 +1269,16 @@ html.light::view-transition-new(root) {
 
   .cv-contact-link:hover {
     border-color: rgba(225, 189, 104, 0.28);
+  }
+
+  .cv-contact-link--featured {
+    background:
+      linear-gradient(135deg, rgba(76, 142, 168, 0.1), rgba(201, 154, 62, 0.06)),
+      rgba(244, 234, 216, 0.018);
+  }
+
+  .cv-contact-link--featured .cv-row-title {
+    color: var(--color-accent-strong);
   }
 
   .cv-contact-link .cv-row-title {
@@ -2741,6 +2784,14 @@ html.light::view-transition-new(root) {
     color: var(--color-text-strong);
   }
 
+  html.light .cv-hero-signal-list li {
+    border-color: rgba(29, 127, 134, 0.18);
+    background:
+      linear-gradient(135deg, rgba(29, 127, 134, 0.08), rgba(182, 111, 29, 0.055)),
+      rgba(255, 254, 249, 0.72);
+    color: rgba(23, 32, 29, 0.86);
+  }
+
   html.light .cv-skill-heading::before {
     background: var(--color-cool);
     box-shadow: 0 0 0 4px rgba(29, 127, 134, 0.11);
@@ -3116,6 +3167,12 @@ html.light::view-transition-new(root) {
 
   html.light .cv-contact-link:hover {
     border-color: rgba(182, 111, 29, 0.26);
+  }
+
+  html.light .cv-contact-link--featured {
+    background:
+      linear-gradient(135deg, rgba(29, 127, 134, 0.08), rgba(182, 111, 29, 0.06)),
+      rgba(255, 254, 249, 0.58);
   }
 
   html.light .cv-language-card:hover {

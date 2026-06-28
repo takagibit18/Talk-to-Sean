@@ -23,13 +23,15 @@ export default function Contact({
     value,
     href,
     external,
+    featured,
   }: {
     label: string;
     value: string;
     href: string;
     external?: boolean;
+    featured?: boolean;
   }) => (
-    <div className="cv-contact-link group">
+    <div className={`cv-contact-link group${featured ? " cv-contact-link--featured" : ""}`}>
       <a
         href={href}
         target={external ? "_blank" : undefined}
@@ -52,19 +54,19 @@ export default function Contact({
 
   return (
     <section id="contact" className="cv-section">
-      <SectionHeader number="07" label={data.sections.contact} />
-      <div className="cv-contact-panel">
-        {c.phone && <Row label={c.phoneLabel} value={c.phone} href={toTelHref(c.phone)} />}
-        {c.email && <Row label={c.emailLabel} value={c.email} href={`mailto:${c.email}`} />}
-        {c.site && <Row label={c.siteLabel} value={c.site} href={c.siteHref} external />}
+      <SectionHeader number="08" label={data.sections.contact} />
+      <div className="cv-contact-panel" role="region" aria-label="Contact options">
         {talkToSeanUrl && (
           <Row
             label={c.talkToSeanLabel}
             value={c.talkToSeanValue}
             href={talkToSeanUrl}
             external={isExternalChat}
+            featured
           />
         )}
+        {c.email && <Row label={c.emailLabel} value={c.email} href={`mailto:${c.email}`} />}
+        {c.site && <Row label={c.siteLabel} value={c.site} href={c.siteHref} external />}
         <div className="cv-contact-link cv-contact-social">
           <div className="min-w-0 flex-1">
             <span className="mb-4 block text-sm font-semibold text-[color:var(--color-text-strong)]">
@@ -99,6 +101,18 @@ export default function Contact({
                     modalClose={c.weChat.modalClose}
                     modalQrAlt={c.weChat.modalQrAlt}
                   />
+                ) : s.kind === "handle" && s.text ? (
+                  <WeChatModalTrigger
+                    key={`${s.label}-handle`}
+                    label={s.label}
+                    wechatId={s.text}
+                    modalCopy={c.socialCopy}
+                    modalCopied={c.socialCopied}
+                    modalCopyFailed={c.weChat.modalCopyFailed}
+                    modalClose={c.weChat.modalClose}
+                    modalQrAlt=""
+                    showQrCode={false}
+                  />
                 ) : s.text ? (
                   <div
                     key={`${s.label}-${s.text}`}
@@ -112,6 +126,7 @@ export default function Contact({
             </div>
           </div>
         </div>
+        {c.phone && <Row label={c.phoneLabel} value={c.phone} href={toTelHref(c.phone)} />}
       </div>
     </section>
   );

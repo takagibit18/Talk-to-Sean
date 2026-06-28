@@ -36,7 +36,7 @@ export type CVSocial = {
   href?: string;
   text?: string;
   /** Opens modal contact UI (see `contact.weChat` strings). */
-  kind?: "wechat";
+  kind?: "wechat" | "handle";
 };
 
 export type CVContactWeChat = {
@@ -63,6 +63,7 @@ export type CVData = {
     intent: string;
     role: string;
     location: string;
+    signals: string[];
     quote: string;
     talkToSean: string;
     labTitle: string;
@@ -118,6 +119,8 @@ export type CVData = {
     siteHref: string;
     talkToSeanLabel: string;
     talkToSeanValue: string;
+    socialCopy: string;
+    socialCopied: string;
     weChat: CVContactWeChat;
     socials: CVSocial[];
   };
@@ -165,7 +168,8 @@ export const CV_DATA: Record<Locale, CVData> = {
       intent: "Agent / RAG / LLM systems",
       role: "AI-native developer,",
       location:
-        "combining product taste with engineering discipline to turn LLM ideas into traceable, evaluable systems.",
+        "turning LLM demos into traceable, evaluable systems that teams can actually ship.",
+      signals: ["Eval-first builder", "Agent workflow engineer", "Product-minded backend"],
       quote:
         "I judge LLM applications on reproducible evals and end-to-end traces, not on gut feel.",
       talkToSean: "Talk to Sean",
@@ -202,7 +206,7 @@ export const CV_DATA: Record<Locale, CVData> = {
     about: {
       meta: "who I am",
       body:
-        "AI Native developer focused on traceable Agent, RAG, and workflow systems. My default loop is prototype -> trace -> evaluate -> harden: build quickly, expose tool calls and context, measure behavior with evals, then stabilize with Docker, GitHub Actions, and reviewable workflows. I also treat my LLM Wiki as a Content Operating System for turning project work into reusable knowledge assets.",
+        "AI Native developer focused on traceable Agent, RAG, and workflow systems. I like the messy middle between product idea and production behavior: prototype -> trace -> evaluate -> harden. That means building quickly, exposing tool calls and context, measuring behavior with evals, then stabilizing the system with Docker, GitHub Actions, and reviewable workflows. I also treat my LLM Wiki as a Content Operating System for turning project work into reusable knowledge assets.",
     },
     skills: [
       {
@@ -291,6 +295,8 @@ export const CV_DATA: Record<Locale, CVData> = {
       siteHref: "https://github.com/takagibit18",
       talkToSeanLabel: "AI profile",
       talkToSeanValue: "Talk to Sean",
+      socialCopy: "Copy handle",
+      socialCopied: "Handle copied.",
       weChat: {
         modalClose: "Close",
         modalCopy: "Copy WeChat ID",
@@ -301,6 +307,9 @@ export const CV_DATA: Record<Locale, CVData> = {
       socials: [
         { label: "GitHub", href: "https://github.com/takagibit18" },
         { label: "WeChat", text: "Sean_Yu3", kind: "wechat" },
+        { label: "抖音", text: "Sean的构建日志", kind: "handle" },
+        { label: "小红书", text: "Sean的构建日志", kind: "handle" },
+        { label: "Twitter", text: "Sean的构建日志", kind: "handle" },
       ],
     },
     chat: {
@@ -366,7 +375,8 @@ export const CV_DATA: Record<Locale, CVData> = {
       nameLatin: "XIN YUXING",
       intent: "Agent / RAG / LLM 系统",
       role: "AI-native 开发者，",
-      location: "结合产品品味与工程纪律，把 LLM 想法打磨成可追踪、可评测的系统。",
+      location: "把 LLM Demo 打磨成可追踪、可评测、真正能上线的系统。",
+      signals: ["评测优先的构建者", "Agent 工作流工程", "懂产品的后端实现"],
       quote:
         "对大模型应用的判断，我坚持以可复现的评测与端到端链路为依据，而不是依赖主观感觉。",
       talkToSean: "和 Sean 聊聊",
@@ -403,7 +413,7 @@ export const CV_DATA: Record<Locale, CVData> = {
     about: {
       meta: "个人简介",
       body:
-        "AI Native 开发者，专注可追踪的 Agent、RAG 与 Workflow 系统。我的默认工作流是原型 -> 追踪 -> 评测 -> 打磨：先快速构建，再暴露工具调用与上下文，用评测度量行为，最后通过 Docker、GitHub Actions 和可 review 的流程稳定系统。我也把 LLM Wiki 视为内容操作系统，用来把项目实践沉淀成可复用知识资产。",
+        "AI Native 开发者，专注可追踪的 Agent、RAG 与 Workflow 系统。我喜欢产品想法到生产行为之间那段最混乱、也最有价值的中间地带：原型 -> 追踪 -> 评测 -> 打磨。先快速构建，再暴露工具调用与上下文，用评测度量行为，最后通过 Docker、GitHub Actions 和可 review 的流程稳定系统。我也把 LLM Wiki 视为内容操作系统，用来把项目实践沉淀成可复用知识资产。",
     },
     skills: [
       {
@@ -491,6 +501,8 @@ export const CV_DATA: Record<Locale, CVData> = {
       siteHref: "https://github.com/takagibit18",
       talkToSeanLabel: "AI 个人档案",
       talkToSeanValue: "和 Sean 的 AI 分身聊聊",
+      socialCopy: "复制账号",
+      socialCopied: "已复制账号。",
       weChat: {
         modalClose: "关闭",
         modalCopy: "复制微信号",
@@ -501,6 +513,9 @@ export const CV_DATA: Record<Locale, CVData> = {
       socials: [
         { label: "GitHub", href: "https://github.com/takagibit18" },
         { label: "微信", text: "Sean_Yu3", kind: "wechat" },
+        { label: "抖音", text: "Sean的构建日志", kind: "handle" },
+        { label: "小红书", text: "Sean的构建日志", kind: "handle" },
+        { label: "Twitter", text: "Sean的构建日志", kind: "handle" },
       ],
     },
     chat: {

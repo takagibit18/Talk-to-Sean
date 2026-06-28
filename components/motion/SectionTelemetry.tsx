@@ -60,8 +60,8 @@ export function getTelemetryNodeMotion({
 
   if (index === safeActiveIndex && nextIndex !== safeActiveIndex) {
     return {
-      scaleX: roundMotion(1 - bridge * 0.08),
-      scaleY: roundMotion(1 + bridge * 0.45),
+      scaleX: 1,
+      scaleY: 1,
       opacity: roundMotion(0.48 + proximity * 0.47),
       shiftY: roundMotion(shiftY),
       focus: roundMotion(proximity),
@@ -70,8 +70,8 @@ export function getTelemetryNodeMotion({
 
   if (index === nextIndex && nextIndex !== safeActiveIndex) {
     return {
-      scaleX: roundMotion(1 + bridge * 0.08),
-      scaleY: roundMotion(1 - bridge * 0.16),
+      scaleX: 1,
+      scaleY: 1,
       opacity: roundMotion(0.36 + proximity * 0.48),
       shiftY: roundMotion(-shiftY * 0.58),
       focus: roundMotion(proximity),
@@ -202,6 +202,7 @@ export default function SectionTelemetry({ items }: { items: SectionTelemetryIte
             aria-label={item.label}
             aria-current={item.id === telemetry.activeId ? "location" : undefined}
             data-label={item.label}
+            title={item.label}
             style={
               {
                 "--telemetry-node-index": index,

@@ -27,9 +27,9 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
     reducedMotion
       ? { initial: false as const, animate: {} }
       : {
-          initial: { opacity: 0, y: 24 },
+          initial: { opacity: 0.82, y: 12 },
           animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.7, delay, ease: EASE },
+          transition: { duration: 0.46, delay: Math.min(delay, 0.18), ease: EASE },
         };
 
   useEffect(() => {
@@ -109,9 +109,15 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
                   {data.hero.location}
                 </span>
               </motion.p>
+
+              <motion.ul {...fadeUp(0.28)} className="cv-hero-signal-list" aria-label="Profile signals">
+                {data.hero.signals.map((signal) => (
+                  <li key={signal}>{signal}</li>
+                ))}
+              </motion.ul>
             </div>
 
-            <motion.div {...fadeUp(0.32)} className="flex flex-wrap items-center gap-3 pt-1">
+            <motion.div {...fadeUp(0.3)} className="flex flex-wrap items-center gap-3 pt-1">
               <a href="#projects" className="cv-cta cv-cta-primary focus-ring text-sm">
                 {data.nav.exploreProjects}
                 <ArrowDown size={14} />
