@@ -4,6 +4,7 @@ import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, FileDown, GitBranch, MessageCircle } from "lucide-react";
 import TextHoverEffect from "@/components/motion/TextHoverEffect";
+import FluidCursor from "@/components/motion/FluidCursor";
 import type { CVData } from "@/lib/cv-data";
 import { MOTION_TOKENS, MOTION_TRANSITIONS, STAGGER_VARIANTS } from "@/lib/motion-system";
 
@@ -52,6 +53,7 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
 
   return (
     <section className="cv-hero" aria-labelledby="hero-title">
+      <FluidCursor />
       <motion.div
         className="cv-hero__layout"
         initial={reducedMotion ? false : "hidden"}
@@ -97,7 +99,12 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
           </motion.div>
         </div>
 
-        <motion.div variants={childVariants} className="cv-hero-card cv-hero-trace" data-motion-state="processing">
+        <motion.div
+          variants={childVariants}
+          className="cv-hero-trace"
+          data-motion-state="processing"
+          data-surface-level="2"
+        >
           <div className="cv-system-heading">
             <div>
               <span>{data.hero.labTitle}</span>

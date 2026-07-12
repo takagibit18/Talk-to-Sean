@@ -13,7 +13,6 @@ import Languages from "@/components/cv/Languages";
 import Publications from "@/components/cv/Publications";
 import Contact from "@/components/cv/Contact";
 import Footer from "@/components/cv/Footer";
-import FluidCursor from "@/components/motion/FluidCursor";
 import ScrollProgress from "@/components/motion/ScrollProgress";
 import SectionReveal from "@/components/motion/SectionReveal";
 import SectionTelemetry from "@/components/motion/SectionTelemetry";
@@ -52,9 +51,8 @@ export default function HomeContent({
   };
 
   return (
-    <>
+    <div className="home-shell">
       <ScrollProgress />
-      <FluidCursor />
       <TopBar user={user} data={data} locale={locale} onLocaleChange={handleLocaleChange} />
 
       <div className="page-grain" aria-hidden />
@@ -82,6 +80,6 @@ export default function HomeContent({
         </SectionReveal>
         <Footer data={data} user={user} />
       </main>
-    </>
+    </div>
   );
 }

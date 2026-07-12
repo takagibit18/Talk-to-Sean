@@ -14,9 +14,15 @@ interface TopBarProps {
   onLocaleChange: (locale: Locale) => void;
 }
 
+const PRIMARY_NAV_IDS = new Set(["projects", "skills", "activity", "about", "contact"]);
+
 export default function TopBar({ user, data, locale, onLocaleChange }: TopBarProps) {
   const displayName = user?.name || user?.login || data.footer.author;
   const items = useMemo(() => getHomeSectionItems(data), [data]);
+  const primaryItems = useMemo(
+    () => items.filter((item) => PRIMARY_NAV_IDS.has(item.id)),
+    [items],
+  );
   const [activeId, setActiveId] = useState(items[0]?.id ?? "projects");
 
   useEffect(() => {
@@ -49,11 +55,24 @@ export default function TopBar({ user, data, locale, onLocaleChange }: TopBarPro
 
   return (
     <header className="cv-topbar">
-      <div className="cv-container cv-topbar__primary">
+      <div className="cv-container cv-topbar__inner">
         <a href="#main-content" className="cv-topbar__identity focus-ring">
           <span className="cv-status-dot" aria-hidden />
           <span>{displayName}</span>
         </a>
+
+        <nav className="cv-topbar__nav" aria-label={data.nav.sectionsLabel}>
+          {primaryItems.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className="focus-ring"
+              aria-current={activeId === item.id ? "location" : undefined}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
         <div className="cv-topbar__controls">
           <AnimatedThemeToggler
@@ -75,20 +94,6 @@ export default function TopBar({ user, data, locale, onLocaleChange }: TopBarPro
           </div>
         </div>
       </div>
-
-      <nav className="cv-topbar__nav cv-container" aria-label={data.nav.sectionsLabel}>
-        {items.map((item) => (
-          <a
-            key={item.id}
-            href={`#${item.id}`}
-            className="focus-ring"
-            aria-current={activeId === item.id ? "location" : undefined}
-          >
-            <span>{item.number}</span>
-            {item.label}
-          </a>
-        ))}
-      </nav>
     </header>
   );
 }

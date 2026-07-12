@@ -38,10 +38,12 @@ export const ICON_CLOUD_ROTATION_CONFIG = {
 } as const;
 
 export const ICON_CLOUD_ORBIT_CONFIG = {
-  lineWidth: 1.25,
-  backAlpha: 0.13,
-  frontAlpha: 0.32,
+  lineWidth: 1,
+  backAlpha: 0.08,
+  frontAlpha: 0.2,
 } as const;
+
+export const ICON_CLOUD_VISIBLE_ORBIT_COUNT = 3;
 
 export function getIconCloudPointerDecay(
   elapsedMs: number,
@@ -367,7 +369,10 @@ export default function IconCloud({
       ctx.imageSmoothingQuality = "high";
       ctx.clearRect(0, 0, width, height);
 
-      points.forEach((point, index) => {
+      points
+        .filter((_, index) => index % 3 === 0)
+        .slice(0, ICON_CLOUD_VISIBLE_ORBIT_COUNT)
+        .forEach((point, index) => {
         const projected = projectPoint(point, rotation);
         const depth = (projected.z + 1) / 2;
         const depthAlpha =
@@ -380,7 +385,7 @@ export default function IconCloud({
           index % 2 === 0 ? depthAlpha : depthAlpha * 0.72,
           index * 0.73,
         );
-      });
+        });
 
       cloudItems.forEach(({ item, x, y, z, scale }) => {
         const isActive = activeLabels.includes(item.label);

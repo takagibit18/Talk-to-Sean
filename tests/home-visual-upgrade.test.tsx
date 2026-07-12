@@ -7,6 +7,7 @@ import ContributionHeatmap from "@/components/ContributionHeatmap";
 import MergeWardenFlow from "@/components/motion/MergeWardenFlow";
 import SectionTelemetry, { getTelemetryNodeMotion } from "@/components/motion/SectionTelemetry";
 import {
+  ICON_CLOUD_VISIBLE_ORBIT_COUNT,
   ICON_CLOUD_ROTATION_CONFIG,
   createIconCloudOrbitPoints,
   getIconCloudPointerDecay,
@@ -195,6 +196,7 @@ describe("homepage visual upgrade", () => {
   });
 
   test("icon cloud uses calm auto-rotation without speeding up on pointer hover", () => {
+    expect(ICON_CLOUD_VISIBLE_ORBIT_COUNT).toBe(3);
     const fullYRotationSeconds =
       (Math.PI * 2) / (ICON_CLOUD_ROTATION_CONFIG.autoRotateY * 60);
 

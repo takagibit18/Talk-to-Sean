@@ -42,11 +42,11 @@ export default function Skills({ data }: { data: CVData }) {
           {data.skills.map((group, groupIndex) => {
             const Icon = GROUP_ICONS[groupIndex] || Wrench;
             return (
-              <motion.div key={group.group} className="cv-skill-cluster focus-ring" tabIndex={0} variants={REVEAL_VARIANTS}>
+              <motion.div key={group.group} className="cv-skill-cluster" variants={REVEAL_VARIANTS}>
                 <strong className="cv-skill-heading"><Icon size={17} aria-hidden />{group.group}</strong>
                 <div className="cv-skill-chips">
                   {group.items.map((item) => (
-                    <span key={item} className="cv-chip" tabIndex={0}>{item}</span>
+                    <span key={item} className="cv-chip">{item}</span>
                   ))}
                 </div>
               </motion.div>
@@ -55,7 +55,7 @@ export default function Skills({ data }: { data: CVData }) {
         </motion.div>
 
         <div className="cv-skills-system">
-          <div className="cv-icon-cloud-panel">
+          <div className="cv-icon-cloud-panel" data-surface-level="2">
             <div className="cv-skills-system__heading">
               <div>
                 <span>{data.skillsUi.ecosystemLabel}</span>

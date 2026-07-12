@@ -51,7 +51,7 @@ export default function CapabilityMatrix({
   );
 
   return (
-    <div className="capability-matrix">
+    <div className="capability-matrix" data-surface-level="0">
       <div className="capability-matrix__heading">
         <div>
           <span>{copy.matrixLabel}</span>

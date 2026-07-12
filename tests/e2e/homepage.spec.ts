@@ -36,7 +36,11 @@ test("homepage keeps project-first architecture and linked capability interactio
     "contact",
   ]);
 
-  await page.getByRole("link", { name: /01 projects/i }).click();
+  await page
+    .getByRole("banner")
+    .getByRole("navigation", { name: /portfolio sections/i })
+    .getByRole("link", { name: /^projects$/i })
+    .click();
   await expect(page.locator("#projects")).toBeInViewport();
 
   const cloud = page.getByRole("group", { name: /core technology ecosystem/i });

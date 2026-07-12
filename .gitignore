@@ -33,6 +33,17 @@ yarn-error.log*
 # vercel
 .vercel
 
+# artifacts (screenshots, visual audits, temporary work)
+/artifacts/
+.web-shader-extractor/
+
+# temp screenshots
+*.screen.png
+*-screenshot.png
+screenshot-*.png
+Screen Shot *.png
+
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
