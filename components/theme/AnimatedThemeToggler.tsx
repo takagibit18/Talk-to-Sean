@@ -42,7 +42,13 @@ function shouldSkipViewTransition() {
   );
 }
 
-export default function AnimatedThemeToggler() {
+export default function AnimatedThemeToggler({
+  lightLabel = "Switch to light theme",
+  darkLabel = "Switch to dark theme",
+}: {
+  lightLabel?: string;
+  darkLabel?: string;
+} = {}) {
   const [theme, setTheme] = useState<ThemeMode>("dark");
 
   useEffect(() => {
@@ -92,7 +98,7 @@ export default function AnimatedThemeToggler() {
     [theme],
   );
 
-  const nextLabel = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+  const nextLabel = theme === "dark" ? lightLabel : darkLabel;
 
   return (
     <button

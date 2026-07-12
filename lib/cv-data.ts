@@ -12,6 +12,13 @@ export type CVSkillGroup = {
   items: string[];
 };
 
+export type CVCapability = {
+  id: "agent-runtime" | "evaluation" | "backend" | "infrastructure" | "retrieval";
+  name: string;
+  description: string;
+  technologies: string[];
+};
+
 export type CVLanguage = {
   name: string;
   level: string;
@@ -49,6 +56,9 @@ export type CVContactWeChat = {
 
 export type CVData = {
   nav: {
+    sectionsLabel: string;
+    switchToLightTheme: string;
+    switchToDarkTheme: string;
     availability: string;
     downloadCv: string;
     exploreProjects: string;
@@ -57,6 +67,9 @@ export type CVData = {
     timezone: string;
   };
   hero: {
+    availability: string;
+    processingLabel: string;
+    verifiedResultLabel: string;
     yearsBadge: string;
     name: string;
     nameLatin: string;
@@ -85,6 +98,18 @@ export type CVData = {
     body: string;
   };
   skills: CVSkillGroup[];
+  skillsUi: {
+    stackLabel: string;
+    ecosystemLabel: string;
+    cloudVisualLabel: string;
+    ecosystemDescription: string;
+    matrixLabel: string;
+    matrixDescription: string;
+    verifiedLabel: string;
+    processingLabel: string;
+    activeLabel: string;
+  };
+  capabilities: CVCapability[];
   projects: {
     emptyState: string;
     updated: string;
@@ -99,6 +124,12 @@ export type CVData = {
     architectureLabel: string;
     stackLabel: string;
     evidenceLabel: string;
+    metricsLabel: string;
+    architectureVisualLabel: string;
+    githubCta: string;
+    liveDemoCta: string;
+    verifiedLabel: string;
+    processingLabel: string;
   };
   activity: {
     total: (n: string) => string;
@@ -109,6 +140,7 @@ export type CVData = {
   languages: CVLanguage[];
   publications: CVPublication[];
   contact: {
+    optionsLabel: string;
     phoneLabel: string;
     emailLabel: string;
     siteLabel: string;
@@ -154,6 +186,9 @@ export type CVData = {
 export const CV_DATA: Record<Locale, CVData> = {
   en: {
     nav: {
+      sectionsLabel: "Portfolio sections",
+      switchToLightTheme: "Switch to light theme",
+      switchToDarkTheme: "Switch to dark theme",
       availability: "Building eval-first Agent / RAG systems",
       downloadCv: "Download CV",
       exploreProjects: "Explore Projects",
@@ -162,6 +197,9 @@ export const CV_DATA: Record<Locale, CVData> = {
       timezone: "(UTC+8)",
     },
     hero: {
+      availability: "Available for opportunities",
+      processingLabel: "Processing",
+      verifiedResultLabel: "Verified Result",
       yearsBadge: "Class of '27  ·  CS @ MUC",
       name: "Sean Yu",
       nameLatin: "SEAN YU",
@@ -230,6 +268,49 @@ export const CV_DATA: Record<Locale, CVData> = {
         items: ["Docker", "GitHub Actions", "logging & error handling", "Vercel", "remote collaboration"],
       },
     ],
+    skillsUi: {
+      stackLabel: "Technology stack",
+      ecosystemLabel: "Core technology ecosystem",
+      cloudVisualLabel: "Interactive technology icon cloud",
+      ecosystemDescription: "Activate a technology to trace the capabilities it supports.",
+      matrixLabel: "Engineering Capability Matrix",
+      matrixDescription: "What these tools become when composed into deliverable systems.",
+      verifiedLabel: "Verified capability",
+      processingLabel: "Processing",
+      activeLabel: "Active",
+    },
+    capabilities: [
+      {
+        id: "agent-runtime",
+        name: "Agent Runtime",
+        description: "Run agents that reason, call tools, and return structured results.",
+        technologies: ["OpenAI API", "Tool Calling", "Structured Output", "Pydantic"],
+      },
+      {
+        id: "evaluation",
+        name: "Evaluation",
+        description: "Measure retrieval, generation quality, and regression across iterations.",
+        technologies: ["Golden Set", "Regression Testing", "RAGAS-style eval", "pytest"],
+      },
+      {
+        id: "backend",
+        name: "Backend",
+        description: "Build typed, asynchronous, and maintainable AI services.",
+        technologies: ["FastAPI", "Pydantic", "asyncio", "Streaming UI"],
+      },
+      {
+        id: "infrastructure",
+        name: "Infrastructure",
+        description: "Create reproducible environments and reliable delivery pipelines.",
+        technologies: ["Docker", "Redis", "GitHub Actions", "Vercel"],
+      },
+      {
+        id: "retrieval",
+        name: "Retrieval",
+        description: "Retrieve and rerank the right context for grounded generation.",
+        technologies: ["Qdrant", "BM25 / RRF", "Embeddings", "Rerankers"],
+      },
+    ],
     projects: {
       emptyState: "No repositories found.",
       updated: "Updated",
@@ -245,6 +326,12 @@ export const CV_DATA: Record<Locale, CVData> = {
       architectureLabel: "Architecture",
       stackLabel: "Stack",
       evidenceLabel: "Evidence",
+      metricsLabel: "Verified metrics",
+      architectureVisualLabel: "System architecture",
+      githubCta: "GitHub",
+      liveDemoCta: "Live Demo",
+      verifiedLabel: "Verified",
+      processingLabel: "Processing",
     },
     activity: {
       total: (n) => `${n} contributions in the last 6 months`,
@@ -285,6 +372,7 @@ export const CV_DATA: Record<Locale, CVData> = {
       },
     ],
     contact: {
+      optionsLabel: "Contact options",
       phoneLabel: "Phone",
       emailLabel: "Email",
       siteLabel: "GitHub",
@@ -362,6 +450,9 @@ export const CV_DATA: Record<Locale, CVData> = {
   },
   zh: {
     nav: {
+      sectionsLabel: "主页区块导航",
+      switchToLightTheme: "切换到浅色主题",
+      switchToDarkTheme: "切换到深色主题",
       availability: "构建评测优先的 Agent / RAG 系统",
       downloadCv: "下载简历",
       exploreProjects: "查看项目",
@@ -370,6 +461,9 @@ export const CV_DATA: Record<Locale, CVData> = {
       timezone: "(UTC+8)",
     },
     hero: {
+      availability: "可接受实习与合作机会",
+      processingLabel: "处理中",
+      verifiedResultLabel: "已验证结果",
       yearsBadge: "27届 · 中央民大计科",
       name: "欣禹行",
       nameLatin: "XIN YUXING",
@@ -437,6 +531,49 @@ export const CV_DATA: Record<Locale, CVData> = {
         items: ["Docker", "GitHub Actions", "日志与错误处理", "Vercel", "远程协作"],
       },
     ],
+    skillsUi: {
+      stackLabel: "技术栈分类",
+      ecosystemLabel: "核心技术生态",
+      cloudVisualLabel: "交互式技术图标云",
+      ecosystemDescription: "激活技术节点，查看它支撑的工程能力。",
+      matrixLabel: "工程能力矩阵",
+      matrixDescription: "这些工具组合后能够交付的系统能力。",
+      verifiedLabel: "已验证能力",
+      processingLabel: "处理中",
+      activeLabel: "已激活",
+    },
+    capabilities: [
+      {
+        id: "agent-runtime",
+        name: "Agent 运行时",
+        description: "让 Agent 完成推理、工具调用并返回结构化结果。",
+        technologies: ["OpenAI API", "Tool Calling", "Structured Output", "Pydantic"],
+      },
+      {
+        id: "evaluation",
+        name: "评测",
+        description: "衡量检索、生成质量与多次迭代之间的回归变化。",
+        technologies: ["Golden Set", "Regression Testing", "RAGAS 风格评测", "pytest"],
+      },
+      {
+        id: "backend",
+        name: "后端",
+        description: "构建类型安全、异步且可维护的 AI 服务。",
+        technologies: ["FastAPI", "Pydantic", "asyncio", "Streaming UI"],
+      },
+      {
+        id: "infrastructure",
+        name: "基础设施",
+        description: "建立可复现环境与可靠的交付流水线。",
+        technologies: ["Docker", "Redis", "GitHub Actions", "Vercel"],
+      },
+      {
+        id: "retrieval",
+        name: "检索",
+        description: "检索并重排正确上下文，让生成结果有事实依据。",
+        technologies: ["Qdrant", "BM25 / RRF", "Embedding", "Reranker"],
+      },
+    ],
     projects: {
       emptyState: "暂无可展示仓库。",
       updated: "更新于",
@@ -451,6 +588,12 @@ export const CV_DATA: Record<Locale, CVData> = {
       architectureLabel: "架构",
       stackLabel: "技术栈",
       evidenceLabel: "证据",
+      metricsLabel: "可验证指标",
+      architectureVisualLabel: "系统架构",
+      githubCta: "GitHub",
+      liveDemoCta: "在线演示",
+      verifiedLabel: "已验证",
+      processingLabel: "处理中",
     },
     activity: {
       total: (n) => `过去半年共 ${n} 次贡献`,
@@ -491,6 +634,7 @@ export const CV_DATA: Record<Locale, CVData> = {
       },
     ],
     contact: {
+      optionsLabel: "联系方式",
       phoneLabel: "电话",
       emailLabel: "邮箱",
       siteLabel: "GitHub",

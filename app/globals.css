@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./home.css";
 @source "../app/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../components/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../lib/**/*.{js,ts,jsx,tsx,mdx}";
@@ -7,9 +8,9 @@
   --font-display: var(--font-space-grotesk);
   --font-body: var(--font-manrope);
 
-  --color-bg: #0b0b09;
-  --color-bg-soft: #11100d;
-  --color-bg-elevated: #17140f;
+  --color-bg: #090907;
+  --color-bg-soft: #0c0c09;
+  --color-bg-elevated: #15120d;
   --color-text-strong: #f4ead8;
   --color-text: #d8cfbe;
   --color-text-muted: #a39b8b;
@@ -29,8 +30,14 @@
   --shadow-lift: 0 18px 36px rgba(0, 0, 0, 0.65);
 
   --ease-swift: cubic-bezier(0.22, 0.68, 0.2, 1);
-  --dur-fast: 160ms;
-  --dur-mid: 260ms;
+  --dur-fast: 180ms;
+  --dur-mid: 280ms;
+  --dur-slow: 460ms;
+  --dur-ambient: 8s;
+  --signal-idle: rgba(163, 155, 139, 0.46);
+  --signal-processing: var(--color-cool);
+  --signal-verified: var(--color-accent-strong);
+  --signal-stable: var(--color-text-strong);
 }
 
 :root {
@@ -197,27 +204,23 @@ body {
   background: var(--color-bg);
 }
 
+html {
+  scroll-padding-top: 7rem;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-manrope), sans-serif;
   color: var(--color-text);
-  background:
-    radial-gradient(1100px 580px at 78% -12%, rgba(201, 154, 62, 0.13) 0%, rgba(201, 154, 62, 0.04) 42%, transparent 72%),
-    radial-gradient(760px 520px at 6% 10%, rgba(244, 234, 216, 0.055) 0%, rgba(244, 234, 216, 0.018) 48%, transparent 74%),
-    linear-gradient(180deg, #11100d 0%, var(--color-bg) 42%, #080807 100%),
-    var(--color-bg);
+  background: var(--color-bg);
   transition:
     background var(--dur-mid) var(--ease-swift),
     color var(--dur-mid) var(--ease-swift);
 }
 
 html.light body {
-  background:
-    radial-gradient(940px 520px at 78% -12%, rgba(182, 111, 29, 0.1) 0%, rgba(182, 111, 29, 0.028) 42%, transparent 72%),
-    radial-gradient(760px 520px at 6% 10%, rgba(29, 127, 134, 0.09) 0%, rgba(29, 127, 134, 0.025) 48%, transparent 74%),
-    linear-gradient(180deg, #fffef9 0%, var(--color-bg) 48%, #e9efe7 100%),
-    var(--color-bg);
+  background: var(--color-bg);
 }
 
 ::view-transition-old(root),
@@ -233,16 +236,7 @@ html.light::view-transition-new(root) {
 
 @layer components {
   .page-grain {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.22;
-    background-image:
-      linear-gradient(rgba(244, 234, 216, 0.038) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(244, 234, 216, 0.035) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: radial-gradient(circle at center, black 40%, transparent 92%);
+    display: none;
   }
 
   .cv-container {
@@ -1166,31 +1160,8 @@ html.light::view-transition-new(root) {
     }
   }
 
-  .cursor-spotlight-host {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .cursor-spotlight {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 0;
-    width: 360px;
-    height: 360px;
-    border-radius: 999px;
-    opacity: 0;
-    pointer-events: none;
-    background: radial-gradient(circle, rgba(225, 189, 104, 0.1) 0%, rgba(201, 154, 62, 0.055) 38%, transparent 72%);
-    mix-blend-mode: screen;
-    transform: translate3d(-999px, -999px, 0);
-    transition: opacity 180ms var(--ease-swift);
-    will-change: transform, opacity;
-  }
-
-  .cursor-spotlight-host > :not(.cursor-spotlight) {
-    position: relative;
-    z-index: 1;
+  .fluid-cursor-canvas {
+    display: none;
   }
 
 
@@ -1215,8 +1186,12 @@ html.light::view-transition-new(root) {
         transparent 100%
       );
     filter: blur(4px);
-    animation: heatmapShimmer 7.2s ease-in-out infinite;
+    animation: none;
     will-change: transform, opacity;
+  }
+
+  .heatmap-shimmer--active {
+    animation: heatmapShimmer var(--dur-slow) var(--ease-swift) both;
   }
 
   @media (min-width: 768px) {
@@ -2745,13 +2720,6 @@ html.light::view-transition-new(root) {
     }
   }
 
-  html.light .page-grain {
-    opacity: 0.15;
-    background-image:
-      linear-gradient(rgba(23, 32, 29, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(23, 32, 29, 0.03) 1px, transparent 1px);
-  }
-
   html.light .cv-section,
   html.light .cv-row,
   html.light .cv-skill-cluster {
@@ -3215,11 +3183,6 @@ html.light::view-transition-new(root) {
     background: radial-gradient(circle, rgba(182, 111, 29, 0.14) 0%, rgba(29, 127, 134, 0.11) 36%, transparent 68%);
   }
 
-  html.light .cursor-spotlight {
-    background: radial-gradient(circle, rgba(182, 111, 29, 0.12) 0%, rgba(29, 127, 134, 0.08) 38%, transparent 72%);
-    mix-blend-mode: multiply;
-  }
-
   html.light .section-telemetry__node {
     background:
       color-mix(in srgb, rgba(182, 111, 29, 0.9) calc(var(--telemetry-node-focus, 0) * 100%), rgba(23, 32, 29, 0.12));
@@ -3248,6 +3211,7 @@ html.light::view-transition-new(root) {
   }
 
 }
+
 
 .fade-up {
   animation: fadeUp 700ms var(--ease-swift) both;
@@ -3448,5 +3412,37 @@ html.light::view-transition-new(root) {
   .cv-hero-card:hover .cv-avatar-shell,
   .cv-hero-card:hover .cv-avatar-surface {
     transform: none !important;
+  }
+
+  .fluid-cursor-canvas {
+    display: none !important;
+  }
+
+  .cv-project-card:hover,
+  .cv-project-card:focus-within,
+  .capability-row:hover,
+  .capability-row:focus-visible,
+  .icon-cloud__node:hover,
+  .icon-cloud__node:focus-visible,
+  .cv-chip:hover,
+  .cv-chip:focus-visible {
+    transform: none !important;
+  }
+
+  .heatmap-shimmer,
+  .cv-agent-link-flow,
+  .cv-agent-link-dot {
+    display: none !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .architecture-diagram {
+    overflow: visible;
+  }
+
+  .architecture-diagram svg {
+    width: 100%;
+    min-width: 0;
   }
 }

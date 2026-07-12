@@ -1,0 +1,113 @@
+{
+  "lockStatus": "locked",
+  "targetUrl": "https://activetheory.net/work?utm_source=chatgpt.com",
+  "targetSet": [
+    {
+      "surfaceId": "ctx1",
+      "selector": "canvas:nth(1)",
+      "contextType": "webgl2",
+      "backingSize": { "width": 300, "height": 150 },
+      "stateViewport": [0, 0, 1024, 1024],
+      "contextAttrs": { "antialias": false, "powerPreference": "high-performance", "alpha": false },
+      "owner": "main-thread",
+      "effectRole": "GPU particle system + fluid simulation + cursor splat injection",
+      "attribution": "SOURCE"
+    }
+  ],
+  "effectArchitecture": {
+    "type": "multi-pass WebGL2 particle+fluid system",
+    "engine": "Active Theory 'Hydra' (hydra-thread.js workers for spline data)",
+    "keyComponents": {
+      "fluidSim": {
+        "description": "Navier-Stokes on 1024x1024 texture",
+        "passes": ["advection", "divergence (prog6)", "pressure (prog8/prog9)", "gradient subtract", "vorticity (prog4)", "curl application (prog5)"],
+        "truth": "SOURCE"
+      },
+      "mouseSplat": {
+        "description": "Screen-space splat of velocity at mouse position into fluid texture",
+        "program": "prog12",
+        "uniforms": ["uTarget", "point", "prevPoint", "radius", "color", "aspectRatio"],
+        "blend": "screen blend + additive",
+        "truth": "SOURCE"
+      },
+      "curlNoise": {
+        "description": "Analytic curl noise with 3D potentials and closed-form derivatives (Bridson 2007)",
+        "programs": ["prog15", "prog17"],
+        "truth": "SOURCE"
+      },
+      "particleSystem": {
+        "description": "GPU particles updated in transform feedback FBO, following fluid flow + mouse strength",
+        "programs": ["prog15 (curl no curl+logo SDF)", "prog16/prog18 (point cloud)", "prog17 (spline particles)"],
+        "mouseCoupling": "vec3 flow = texture(tFluid, screenUV).xy; pos += flow * 0.0001 * HZ * uMouseStrength * texture(tFluidMask, screenUV).r",
+        "truth": "SOURCE"
+      },
+      "renderPasses": {
+        "description": "9 identical programs (prog19-prog27) for rendering computed particles to screen",
+        "truth": "PARTIAL"
+      }
+    },
+    "uniformNameHighlights": {
+      "mouseStrength": { "count": 162, "truth": "SOURCE" },
+      "velocity": { "count": 234, "truth": "SOURCE" },
+      "pressure": { "count": 234, "truth": "SOURCE" },
+      "divergence": { "count": 195, "truth": "SOURCE" },
+      "curlParams": { "count": 39, "truth": "SOURCE" },
+      "fluidMask": { "count": 162, "truth": "SOURCE" }
+    }
+  },
+  "mouseCouplingMechanism": {
+    "description": "Three-layer cursor influence pipeline",
+    "layers": [
+      {
+        "layer": "Splat Injection",
+        "mechanism": "Draw screen-blended velocity patch at mouse position (point/prevPoint) into fluid texture with specified radius and color. Cubic ease-out falloff.",
+        "source": "prog12-frag.glsl",
+        "truth": "SOURCE"
+      },
+      {
+        "layer": "Fluid Processing",
+        "mechanism": "Navier-Stokes: advection, divergence, pressure solve, gradient subtraction, vorticity, with curl noise force. Mouse-injected velocity propagates through this multi-pass solver.",
+        "source": "prog4,5,6,8,9,10,11",
+        "truth": "SOURCE"
+      },
+      {
+        "layer": "Particle Response",
+        "mechanism": "GPU particles sample tFluid at screen-projected position. Flow direction scaled by uMouseStrength (mouse velocity magnitude), modulated by tFluidMask (fluid valid region). Force pushes particles in flow direction: `pos += flow * 0.0001 * HZ * uMouseStrength * tFluidMask.r`",
+        "source": "prog15,16,17,18",
+        "truth": "SOURCE"
+      }
+    ]
+  },
+  "evidenceIndex": [
+    { "evidenceId": "ev-001", "path": "evidence/gpu/gl-capture.json", "description": "Full WebGL capture: contexts, programs, uniform names, state", "truth": "SOURCE" },
+    { "evidenceId": "ev-002", "path": "evidence/source/*.glsl", "description": "56 shader files (28 fragment + 28 vertex) from shaderSource hook", "truth": "SOURCE" },
+    { "evidenceId": "ev-003", "path": "evidence/scout/canvas-info.json", "description": "Canvas DOM inventory", "truth": "SOURCE" },
+    { "evidenceId": "ev-004", "path": "evidence/scout/network.json", "description": "All network requests captured", "truth": "SOURCE" },
+    { "evidenceId": "ev-005", "path": "evidence/screenshots/baseline.png", "description": "Viewport screenshot baseline", "truth": "SOURCE" },
+    { "evidenceId": "ev-006", "path": "evidence/screenshots/after-pointer.png", "description": "Screenshot after pointer sweep", "truth": "SOURCE" }
+  ],
+  "traceRoute": "PIPELINE_REPLAY",
+  "fidelityTier": "simplified-essential",
+  "scopeBoundary": {
+    "include": [
+      "Fluid texture simulation with Navier-Stokes passes",
+      "Mouse splat injection into fluid",
+      "Curl noise analytic implementation",
+      "Cursor-responsive quad that samples fluid and displaces/colors",
+      "WebGL2 framebuffer pipeline"
+    ],
+    "exclude": [
+      "GPU particle system with SDF constraints",
+      "Active Theory logo SDF (neural network weights)",
+      "Spline-based particle paths",
+      "Worker-offloaded spline data",
+      "Page layout, navigation, other DOM content",
+      "Full 28-program render pipeline"
+    ]
+  },
+  "alternatives": [
+    "Full BEHAVIOR_REBUILD with simplified JS-only fluid sim (no WebGL)",
+    "Pure CSS cursor trail as BEHAVIOR_REBUILD fallback"
+  ],
+  "nextAction": "Enter PLAN mode to design simplified cursor-following fluid effect for Next.js personal homepage"
+}

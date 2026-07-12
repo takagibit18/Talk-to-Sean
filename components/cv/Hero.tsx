@@ -2,11 +2,11 @@
 
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDown, ArrowUpRight, GitBranch, MessageCircle } from "lucide-react";
-import Image from "next/image";
-import { useCursorSpotlight } from "@/components/motion/useCursorSpotlight";
+import { ArrowDown, ArrowUpRight, FileDown, GitBranch, MessageCircle } from "lucide-react";
 import TextHoverEffect from "@/components/motion/TextHoverEffect";
+import FluidCursor from "@/components/motion/FluidCursor";
 import type { CVData } from "@/lib/cv-data";
+import { MOTION_TOKENS, MOTION_TRANSITIONS, STAGGER_VARIANTS } from "@/lib/motion-system";
 
 interface HeroProps {
   data: CVData;
@@ -15,220 +15,136 @@ interface HeroProps {
 
 export default function Hero({ data, talkToSeanUrl }: HeroProps) {
   const reducedMotion = useReducedMotion();
-  const EASE = [0.22, 0.68, 0.2, 1] as const;
-  const avatarSrc = "/avatar-warm-portrait.png";
   const isExternalChat = talkToSeanUrl ? !talkToSeanUrl.startsWith("/") : false;
-  const { hostRef, spotlightRef } = useCursorSpotlight<HTMLElement>();
   const agentStepListRef = useRef<HTMLDivElement>(null);
   const agentStepRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [agentLineStyle, setAgentLineStyle] = useState<CSSProperties>({});
-
-  const fadeUp = (delay: number) =>
-    reducedMotion
-      ? { initial: false as const, animate: {} }
-      : {
-          initial: { opacity: 0.82, y: 12 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.46, delay: Math.min(delay, 0.18), ease: EASE },
-        };
 
   useEffect(() => {
     const list = agentStepListRef.current;
     const firstStep = agentStepRefs.current[0];
     const lastStep = agentStepRefs.current[data.hero.proofPoints.length - 1];
-    if (!list || !firstStep || !lastStep || typeof window === "undefined") {
-      return undefined;
-    }
+    if (!list || !firstStep || !lastStep || typeof window === "undefined") return undefined;
 
     const updateLineBounds = () => {
       const listRect = list.getBoundingClientRect();
       const firstRect = firstStep.getBoundingClientRect();
       const lastRect = lastStep.getBoundingClientRect();
-      const top = firstRect.top - listRect.top + firstRect.height / 2;
-      const bottom = listRect.bottom - (lastRect.top + lastRect.height / 2);
-
       setAgentLineStyle({
-        "--agent-line-top": `${Math.max(0, top)}px`,
-        "--agent-line-bottom": `${Math.max(0, bottom)}px`,
+        "--agent-line-top": `${Math.max(0, firstRect.top - listRect.top + firstRect.height / 2)}px`,
+        "--agent-line-bottom": `${Math.max(0, listRect.bottom - (lastRect.top + lastRect.height / 2))}px`,
       } as CSSProperties);
     };
-
     updateLineBounds();
-
-    const observer =
-      typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateLineBounds) : null;
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateLineBounds);
     observer?.observe(list);
-    agentStepRefs.current.forEach((step) => {
-      if (step) observer?.observe(step);
-    });
+    agentStepRefs.current.forEach((step) => step && observer?.observe(step));
     window.addEventListener("resize", updateLineBounds);
-
     return () => {
       observer?.disconnect();
       window.removeEventListener("resize", updateLineBounds);
     };
   }, [data.hero.proofPoints.length]);
 
+  const childVariants = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: MOTION_TRANSITIONS.slow },
+  };
+
   return (
-    <section
-      ref={hostRef}
-      className="cursor-spotlight-host relative overflow-hidden pt-24 pb-20 md:pt-32 md:pb-28"
-    >
-      <div ref={spotlightRef} className="cursor-spotlight" aria-hidden />
+    <section className="cv-hero" aria-labelledby="hero-title">
+      <FluidCursor />
+      <motion.div
+        className="cv-hero__layout"
+        initial={reducedMotion ? false : "hidden"}
+        animate={reducedMotion ? undefined : "show"}
+        variants={STAGGER_VARIANTS}
+      >
+        <div className="cv-hero__content">
+          <motion.div variants={childVariants} className="cv-availability">
+            <span className="cv-status-dot" aria-hidden />
+            <span>{data.hero.availability}</span>
+          </motion.div>
 
-      <div className="relative z-10 flex flex-col gap-8 md:gap-10">
-        <div className="grid gap-8 md:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.82fr)] md:items-start md:gap-16">
-          <div className="flex flex-col gap-5 md:gap-6">
-            <motion.div {...fadeUp(0)} className="flex flex-wrap items-center gap-3">
-              <span className="cv-badge">{data.hero.yearsBadge}</span>
-              <span className="cv-badge cv-badge--accent">{data.hero.intent}</span>
-            </motion.div>
+          <motion.h1 id="hero-title" variants={childVariants} className="cv-hero-name" aria-label={data.hero.name}>
+            <TextHoverEffect text={data.hero.name} />
+          </motion.h1>
 
-            <div className="flex flex-col gap-3">
-              <motion.h1
-                {...fadeUp(0.05)}
-                className="cv-hero-name"
-                aria-label={data.hero.name}
+          <motion.p variants={childVariants} className="cv-hero__role">
+            <strong>{data.hero.role}</strong>{" "}
+            <span>{data.hero.location}</span>
+          </motion.p>
+
+          <motion.div variants={childVariants} className="cv-hero__actions">
+            <a href="#projects" className="cv-cta cv-cta-primary focus-ring text-sm">
+              {data.nav.exploreProjects}
+              <ArrowDown size={14} aria-hidden />
+            </a>
+            {talkToSeanUrl && (
+              <a
+                href={talkToSeanUrl}
+                target={isExternalChat ? "_blank" : undefined}
+                rel={isExternalChat ? "noopener noreferrer" : undefined}
+                className="cv-cta cv-cta--cool focus-ring text-sm"
               >
-                <TextHoverEffect text={data.hero.name} />
-              </motion.h1>
-
-              <motion.span
-                {...fadeUp(0.15)}
-                className="text-xs md:text-sm uppercase tracking-[0.35em] text-[color:var(--color-text-muted)]"
-              >
-                {data.hero.nameLatin}
-              </motion.span>
-
-              <motion.p
-                {...fadeUp(0.25)}
-                className="cv-heading-sm mt-2 max-w-3xl text-[color:var(--color-text-strong)]"
-              >
-                {data.hero.role}{" "}
-                <span className="text-[color:var(--color-text-muted)]">
-                  {data.hero.location}
-                </span>
-              </motion.p>
-
-              <motion.ul {...fadeUp(0.28)} className="cv-hero-signal-list" aria-label="Profile signals">
-                {data.hero.signals.map((signal) => (
-                  <li key={signal}>{signal}</li>
-                ))}
-              </motion.ul>
-            </div>
-
-            <motion.div {...fadeUp(0.3)} className="flex flex-wrap items-center gap-3 pt-1">
-              <a href="#projects" className="cv-cta cv-cta-primary focus-ring text-sm">
-                {data.nav.exploreProjects}
-                <ArrowDown size={14} />
+                <MessageCircle size={15} aria-hidden />
+                {data.hero.talkToSean}
+                <ArrowUpRight size={13} aria-hidden />
               </a>
-              {talkToSeanUrl && (
-                <a
-                  href={talkToSeanUrl}
-                  target={isExternalChat ? "_blank" : undefined}
-                  rel={isExternalChat ? "noopener noreferrer" : undefined}
-                  className="cv-cta cv-cta--cool focus-ring text-sm"
-                >
-                  <MessageCircle size={15} />
-                  {data.hero.talkToSean}
-                  <ArrowUpRight size={13} />
-                </a>
-              )}
-              <a href="/cv.pdf" className="cv-cta cv-cta--ghost focus-ring text-sm">
-                {data.nav.downloadCv}
-              </a>
-            </motion.div>
-          </div>
-
-          <motion.div
-            {...fadeUp(0.35)}
-            className="cv-hero-card"
-          >
-            <div className="flex items-center gap-4">
-              <div className="cv-avatar-shell">
-                <div className="cv-avatar-frame">
-                  <div className="cv-avatar-surface">
-                    <Image
-                      src={avatarSrc}
-                      alt={`${data.hero.name} portrait`}
-                      fill
-                      priority
-                      sizes="(min-width: 768px) 224px, 160px"
-                      className="object-cover object-center"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="min-w-0">
-                <div className="text-xs uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
-                  {data.hero.nameLatin}
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-sm text-[color:var(--color-text-strong)]">
-                  <span className="cv-status-dot" aria-hidden />
-                  <span className="truncate">{data.hero.intent}</span>
-                </div>
-              </div>
-            </div>
-
-            <blockquote className="cv-quote">
-              &ldquo; {data.hero.quote} &rdquo;
-            </blockquote>
-
-            <div className="cv-agent-lab" aria-label={data.hero.labTitle}>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-text-muted)]">
-                    {data.hero.labTitle}
-                  </div>
-                  <div className="mt-1 text-sm text-[color:var(--color-text)]">
-                    {data.hero.labSubtitle}
-                  </div>
-                </div>
-                <GitBranch size={18} className="shrink-0 text-[color:var(--color-accent-strong)]" />
-              </div>
-
-              <div
-                ref={agentStepListRef}
-                className="cv-agent-step-list mt-5 grid gap-3"
-                style={agentLineStyle}
-              >
-                <span className="cv-agent-link-line" aria-hidden />
-                <span className="cv-agent-link-flow" aria-hidden />
-                <span className="cv-agent-link-dot" aria-hidden />
-                {data.hero.proofPoints.map((item, index) => (
-                  <div
-                    key={item.label}
-                    ref={(node) => {
-                      agentStepRefs.current[index] = node;
-                    }}
-                    className="cv-agent-step"
-                  >
-                    <span className="cv-agent-step-node" aria-hidden />
-                    <span className="cv-agent-step-label">{item.label}</span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-[color:var(--color-text-strong)]">
-                        {item.value}
-                      </div>
-                      <div className="mt-1 text-xs leading-5 text-[color:var(--color-text-muted)]">
-                        {item.detail}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
+            <a href="/cv.pdf" className="cv-hero-cv-link focus-ring">
+              <FileDown size={14} aria-hidden />
+              {data.nav.downloadCv}
+            </a>
           </motion.div>
         </div>
 
         <motion.div
-          {...fadeUp(0.55)}
-          className="cv-scroll-cue mt-1 flex items-center gap-2 text-xs uppercase tracking-[0.2em]"
+          variants={childVariants}
+          className="cv-hero-trace"
+          data-motion-state="processing"
+          data-surface-level="2"
         >
-          <ArrowDown size={14} />
-          <span>{data.nav.scroll}</span>
+          <div className="cv-system-heading">
+            <div>
+              <span>{data.hero.labTitle}</span>
+              <p>{data.hero.labSubtitle}</p>
+            </div>
+            <div className="cv-system-state">
+              <GitBranch size={16} aria-hidden />
+              <span>{data.hero.processingLabel}</span>
+            </div>
+          </div>
+
+          <div ref={agentStepListRef} className="cv-agent-step-list" style={agentLineStyle}>
+            <span className="cv-agent-link-line" aria-hidden />
+            <span className="cv-agent-link-flow" aria-hidden />
+            <span className="cv-agent-link-dot" aria-hidden />
+            {data.hero.proofPoints.map((item, index) => (
+              <div
+                key={item.label}
+                ref={(node) => {
+                  agentStepRefs.current[index] = node;
+                }}
+                className="cv-agent-step"
+                style={{ "--signal-delay": `${index * MOTION_TOKENS.duration.normal}s` } as CSSProperties}
+              >
+                <span className="cv-agent-step-node" aria-hidden />
+                <span className="cv-agent-step-label">{item.label}</span>
+                <div>
+                  <strong>{item.value}</strong>
+                  <p>{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="cv-hero-trace__result">
+            <span className="signal-status signal-status--verified" aria-hidden />
+            <span>{data.hero.verifiedResultLabel}</span>
+          </div>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }

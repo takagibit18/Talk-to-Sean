@@ -7,7 +7,7 @@ import { CV_DATA } from "@/lib/cv-data";
 import { FEATURED_PROJECTS } from "@/lib/project-highlights";
 
 vi.mock("next/image", () => ({
-  default: (props: ImgHTMLAttributes<HTMLImageElement>) =>
+  default: ({ priority: _priority, fill: _fill, unoptimized: _unoptimized, ...props }: ImgHTMLAttributes<HTMLImageElement> & { priority?: boolean; fill?: boolean; unoptimized?: boolean }) =>
     // eslint-disable-next-line @next/next/no-img-element
     createElement("img", { ...props, alt: props.alt ?? "" }),
 }));

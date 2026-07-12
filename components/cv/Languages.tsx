@@ -1,10 +1,11 @@
 import SectionHeader from "./SectionHeader";
 import type { CVData } from "@/lib/cv-data";
+import { getHomeSectionNumber } from "@/lib/home-sections";
 
 export default function Languages({ data }: { data: CVData }) {
   return (
     <section id="languages" className="cv-section">
-      <SectionHeader number="06" label={data.sections.languages} />
+      <SectionHeader number={getHomeSectionNumber("languages")} label={data.sections.languages} />
       <div className="grid gap-3 md:grid-cols-2">
         {data.languages.map((lang) => (
           <div

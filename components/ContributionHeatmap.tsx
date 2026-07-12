@@ -12,9 +12,9 @@ import type { ContributionDay } from "@/lib/contributions";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Transition } from "framer-motion";
 import SectionHeader from "@/components/cv/SectionHeader";
-import { useCursorSpotlight } from "@/components/motion/useCursorSpotlight";
 import type { Locale } from "@/lib/locale";
 import type { CVData } from "@/lib/cv-data";
+import { getHomeSectionNumber } from "@/lib/home-sections";
 
 interface HeatmapProps {
   contributions: ContributionDay[];
@@ -195,7 +195,6 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
   const [isGridHovered, setIsGridHovered] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
   const [displayTotal, setDisplayTotal] = useState(0);
-  const { hostRef, spotlightRef } = useCursorSpotlight<HTMLElement>();
   const heatmapGridRef = useRef<HTMLDivElement>(null);
   const pointerSamplesRef = useRef<PointerSample[]>([]);
   const trailTargetRef = useRef<ActiveCell | null>(null);
@@ -474,9 +473,8 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
   }, [hasEnteredPanel, reducedMotion, totalContributions]);
 
   return (
-    <section id="activity" ref={hostRef} className="cv-section cursor-spotlight-host overflow-hidden">
-      <div ref={spotlightRef} className="cursor-spotlight" aria-hidden />
-      <SectionHeader number="04" label={data.sections.activity} />
+    <section id="activity" className="cv-section overflow-hidden">
+      <SectionHeader number={getHomeSectionNumber("activity")} label={data.sections.activity} />
 
       <motion.div
         className="cv-section-panel cv-heatmap-panel"
@@ -543,11 +541,10 @@ export default function ContributionHeatmap({ contributions, locale, data }: Hea
                   {!reducedMotion && (
                     <div
                       aria-hidden="true"
-                      className="heatmap-shimmer"
+                      className={`heatmap-shimmer ${isGridHovered || isRevealing ? "heatmap-shimmer--active" : ""}`}
                       style={{
                         left: "var(--hm-week-grid-offset)",
                         width: WEEK_GRID_WIDTH,
-                        animationPlayState: isGridHovered ? "paused" : "running",
                       }}
                     />
                   )}

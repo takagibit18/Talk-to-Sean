@@ -1,68 +1,99 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import type { CVData } from "@/lib/cv-data";
 import type { Locale } from "@/lib/locale";
 import type { GitHubUser } from "@/lib/github";
+import { getHomeSectionItems } from "@/lib/home-sections";
 import AnimatedThemeToggler from "@/components/theme/AnimatedThemeToggler";
 
 interface TopBarProps {
   user: GitHubUser | null;
   data: CVData;
   locale: Locale;
-  onLocaleChange: (l: Locale) => void;
+  onLocaleChange: (locale: Locale) => void;
 }
+
+const PRIMARY_NAV_IDS = new Set(["projects", "skills", "activity", "about", "contact"]);
 
 export default function TopBar({ user, data, locale, onLocaleChange }: TopBarProps) {
   const displayName = user?.name || user?.login || data.footer.author;
+  const items = useMemo(() => getHomeSectionItems(data), [data]);
+  const primaryItems = useMemo(
+    () => items.filter((item) => PRIMARY_NAV_IDS.has(item.id)),
+    [items],
+  );
+  const [activeId, setActiveId] = useState(items[0]?.id ?? "projects");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const probe = window.scrollY + window.innerHeight * 0.3;
+      let next = items[0]?.id ?? "projects";
+      items.forEach((item) => {
+        const section = document.getElementById(item.id);
+        if (section && section.getBoundingClientRect().top + window.scrollY <= probe) {
+          next = item.id;
+        }
+      });
+      setActiveId(next);
+    };
+    const requestUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, [items]);
 
   return (
-    <div className="sticky top-0 z-50 border-b border-[color:var(--color-border)] bg-[color:var(--color-topbar-bg)] backdrop-blur">
-      <div className="cv-container flex h-14 items-center justify-between gap-4">
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-          <span className="cv-status-dot shrink-0" aria-hidden />
-          <span className="min-w-0 truncate text-xs text-[color:var(--color-text-strong)] md:text-sm">
-            {displayName}
-          </span>
-        </div>
+    <header className="cv-topbar">
+      <div className="cv-container cv-topbar__inner">
+        <a href="#main-content" className="cv-topbar__identity focus-ring">
+          <span className="cv-status-dot" aria-hidden />
+          <span>{displayName}</span>
+        </a>
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <AnimatedThemeToggler />
+        <nav className="cv-topbar__nav" aria-label={data.nav.sectionsLabel}>
+          {primaryItems.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className="focus-ring"
+              aria-current={activeId === item.id ? "location" : undefined}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
-          <div className="mr-0 flex shrink-0 items-center gap-0.5 rounded-full border border-[color:var(--color-border)] p-0.5 text-[0.625rem] sm:mr-1 sm:gap-1 sm:text-xs">
-            <button
-              type="button"
-              onClick={() => onLocaleChange("en")}
-              aria-pressed={locale === "en"}
-              className={`focus-ring w-[2.35rem] shrink-0 rounded-full px-1.5 py-0.5 text-center transition sm:w-[2.75rem] sm:px-2 sm:py-1 ${
-                locale === "en"
-                  ? "bg-[color:var(--color-text-strong)] text-[color:var(--color-bg)]"
-                  : "text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text-strong)]"
-              }`}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => onLocaleChange("zh")}
-              aria-pressed={locale === "zh"}
-              className={`focus-ring w-[2.35rem] shrink-0 rounded-full px-1.5 py-0.5 text-center transition sm:w-[2.75rem] sm:px-2 sm:py-1 ${
-                locale === "zh"
-                  ? "bg-[color:var(--color-text-strong)] text-[color:var(--color-bg)]"
-                  : "text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text-strong)]"
-              }`}
-            >
-              中
-            </button>
+        <div className="cv-topbar__controls">
+          <AnimatedThemeToggler
+            lightLabel={data.nav.switchToLightTheme}
+            darkLabel={data.nav.switchToDarkTheme}
+          />
+          <div className="cv-locale-switch" aria-label="Language">
+            {(["en", "zh"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onLocaleChange(option)}
+                aria-pressed={locale === option}
+                className="focus-ring"
+              >
+                {option === "en" ? "EN" : "中"}
+              </button>
+            ))}
           </div>
-
-          <a
-            href="#contact"
-            className="cv-cta inline-flex max-w-[9rem] shrink-0 truncate px-2 py-1.5 text-[0.7rem] sm:max-w-none sm:overflow-visible sm:whitespace-normal sm:px-3 sm:py-2 sm:text-xs"
-          >
-            {data.nav.contactMe}
-          </a>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

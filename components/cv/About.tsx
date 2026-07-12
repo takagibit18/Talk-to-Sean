@@ -1,10 +1,11 @@
 import SectionHeader from "./SectionHeader";
 import type { CVData } from "@/lib/cv-data";
+import { getHomeSectionNumber } from "@/lib/home-sections";
 
 export default function About({ data }: { data: CVData }) {
   return (
     <section id="about" className="cv-section">
-      <SectionHeader number="01" label={data.sections.about} />
+      <SectionHeader number={getHomeSectionNumber("about")} label={data.sections.about} />
       <div className="cv-row" style={{ borderTop: "none", paddingTop: 0 }}>
         <div className="cv-row-meta">
           <strong>{data.about.meta}</strong>

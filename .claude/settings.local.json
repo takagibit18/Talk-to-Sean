@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:activetheory.net)",
+      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('playwright OK'\\)}catch\\(e\\){console.log\\('playwright MISSING'\\)} try{require.resolve\\('@playwright/test'\\);console.log\\('@playwright/test OK'\\)}catch\\(e\\){console.log\\('@playwright/test MISSING'\\)}\")",
+      "Read(//c/Users/Lenovo/AppData/Local/ms-playwright/**)",
+      "Bash(node scripts/recon-activetheory.mjs)",
+      "Bash(HEADED=1 node scripts/recon-activetheory.mjs)",
+      "Bash(node -e \"const c=require\\('./gpu/gl-capture.json'\\); console.log\\(JSON.stringify\\(c.contexts,null,2\\)\\)\")",
+      "Bash(node -e \"const c=require\\('./gpu/gl-capture.json'\\); console.log\\(JSON.stringify\\(c.state,null,2\\)\\)\")",
+      "Bash(node -e \"const c=require\\('./gpu/gl-capture.json'\\); const e=Object.entries\\(c.uniformNameCounts\\).sort\\(\\(a,b\\)=>b[1]-a[1]\\); console.log\\(e.slice\\(0,30\\).map\\(x=>x[0]+' = '+x[1]\\).join\\('\\\\n'\\)\\)\")"
     ]
   }
 }
