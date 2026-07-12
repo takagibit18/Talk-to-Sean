@@ -13,6 +13,9 @@ export type IconCloudItem = {
 type IconCloudProps = {
   items: IconCloudItem[];
   label?: string;
+  groupLabel?: string;
+  activeLabels?: string[];
+  onNodeActivate?: (label: string) => void;
 };
 
 type SpherePoint = {
@@ -22,6 +25,7 @@ type SpherePoint = {
 };
 
 const DEFAULT_LABEL = "Interactive technology icon cloud";
+const EMPTY_ACTIVE_LABELS: string[] = [];
 
 export const ICON_CLOUD_ROTATION_CONFIG = {
   autoRotateY: 0.0059,
@@ -152,7 +156,13 @@ type LogoCacheEntry = {
   failed: boolean;
 };
 
-export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudProps) {
+export default function IconCloud({
+  items,
+  label = DEFAULT_LABEL,
+  groupLabel = "Core technology ecosystem",
+  activeLabels = EMPTY_ACTIVE_LABELS,
+  onNodeActivate,
+}: IconCloudProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reducedMotion = useReducedMotion();
   const points = useMemo(() => createSpherePoints(items.length), [items.length]);
@@ -373,6 +383,7 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       });
 
       cloudItems.forEach(({ item, x, y, z, scale }) => {
+        const isActive = activeLabels.includes(item.label);
         const logo = item.logoSrc ? getLogo(item.logoSrc) : undefined;
         const logoAspect =
           logo?.loaded && logo.image.naturalHeight > 0
@@ -380,7 +391,7 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
             : 1;
         const hasLogo = Boolean(logo?.loaded && !logo.failed);
         const size = Math.max(30, Math.min(48, 26 * scale));
-        const alpha = 0.48 + ((z + 1) / 2) * 0.5;
+        const alpha = (0.34 + ((z + 1) / 2) * 0.42) * (activeLabels.length && !isActive ? 0.68 : 1);
         const chipWidth = hasLogo
           ? Math.min(96, Math.max(size, size * Math.min(logoAspect, 1.95) * 0.92))
           : size;
@@ -393,8 +404,8 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
         roundedRect(ctx, chipX, chipY, chipWidth, chipHeight, chipHeight / 2);
         ctx.fill();
 
-        ctx.strokeStyle = item.color;
-        ctx.globalAlpha = alpha * 0.76;
+        ctx.strokeStyle = isActive ? item.color : z > 0.25 ? cool : border;
+        ctx.globalAlpha = isActive ? Math.min(1, alpha + 0.24) : alpha * 0.58;
         ctx.lineWidth = 1.25;
         ctx.stroke();
 
@@ -402,8 +413,8 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
           const plateSize = chipHeight * 0.76;
           const plateX = x - plateSize / 2;
           const plateY = y - plateSize / 2;
-          ctx.globalAlpha = alpha * 0.92;
-          ctx.fillStyle = "rgba(255, 250, 242, 0.92)";
+          ctx.globalAlpha = isActive ? 0.96 : alpha * 0.72;
+          ctx.fillStyle = isActive ? "rgba(255, 250, 242, 0.96)" : "rgba(224, 220, 210, 0.68)";
           roundedRect(ctx, plateX, plateY, plateSize, plateSize, plateSize * 0.28);
           ctx.fill();
 
@@ -416,7 +427,7 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
           const logoWidth = logo.image.naturalWidth * logoScale;
           const logoHeight = logo.image.naturalHeight * logoScale;
 
-          ctx.globalAlpha = alpha;
+          ctx.globalAlpha = isActive ? 1 : alpha * 0.72;
           ctx.drawImage(
             logo.image,
             x - logoWidth / 2,
@@ -427,8 +438,8 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
           return;
         }
 
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = item.color;
+        ctx.globalAlpha = isActive ? 1 : alpha * 0.72;
+        ctx.fillStyle = isActive ? item.color : cool;
         ctx.beginPath();
         ctx.arc(x, y, chipHeight * 0.34, 0, Math.PI * 2);
         ctx.fill();
@@ -499,14 +510,31 @@ export default function IconCloud({ items, label = DEFAULT_LABEL }: IconCloudPro
       canvas.removeEventListener("pointermove", handlePointerMove);
       canvas.removeEventListener("pointerleave", handlePointerLeave);
     };
-  }, [items, points, reducedMotion]);
+  }, [items, points, reducedMotion, activeLabels]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      role="img"
-      aria-label={label}
-      className="icon-cloud-canvas"
-    />
+    <div className="icon-cloud" role="group" aria-label={groupLabel}>
+      <canvas ref={canvasRef} role="img" aria-label={label} className="icon-cloud-canvas" />
+      <div className="icon-cloud__nodes">
+        {items.map((item, index) => {
+          const active = activeLabels.includes(item.label);
+          return (
+            <button
+              key={item.label}
+              type="button"
+              className="icon-cloud__node focus-ring"
+              aria-label={item.label}
+              data-active={active ? "true" : "false"}
+              style={{ "--icon-index": index } as React.CSSProperties}
+              onMouseEnter={() => onNodeActivate?.(item.label)}
+              onFocus={() => onNodeActivate?.(item.label)}
+              onClick={() => onNodeActivate?.(item.label)}
+            >
+              <span aria-hidden>{item.glyph}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

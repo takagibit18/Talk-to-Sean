@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "web-shader-extractor": {
+      "source": "lixiaolin94/skills",
+      "sourceType": "github",
+      "skillPath": "web-shader-extractor/SKILL.md",
+      "computedHash": "cb019ff58d99203787912281d94670bc44708de23454398a049d3c6a3664fb7d"
+    }
+  }
+}

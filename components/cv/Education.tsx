@@ -1,10 +1,11 @@
 import SectionHeader from "./SectionHeader";
 import type { CVData } from "@/lib/cv-data";
+import { getHomeSectionNumber } from "@/lib/home-sections";
 
 export default function Education({ data }: { data: CVData }) {
   return (
     <section id="education" className="cv-section">
-      <SectionHeader number="05" label={data.sections.education} />
+      <SectionHeader number={getHomeSectionNumber("education")} label={data.sections.education} />
       <div className="cv-section-panel">
         {data.education.map((edu, i) => (
           <article key={i} className="grid gap-5 p-5 md:grid-cols-[260px_1fr] md:gap-10 md:p-7">

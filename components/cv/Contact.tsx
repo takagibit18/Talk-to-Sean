@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import WeChatModalTrigger from "./WeChatModalTrigger";
 import type { CVData } from "@/lib/cv-data";
+import { getHomeSectionNumber } from "@/lib/home-sections";
 
 function toTelHref(phone: string) {
   const normalized = phone.replace(/[^\d+]/g, "");
@@ -54,8 +55,8 @@ export default function Contact({
 
   return (
     <section id="contact" className="cv-section">
-      <SectionHeader number="08" label={data.sections.contact} />
-      <div className="cv-contact-panel" role="region" aria-label="Contact options">
+      <SectionHeader number={getHomeSectionNumber("contact")} label={data.sections.contact} />
+      <div className="cv-contact-panel" role="region" aria-label={c.optionsLabel}>
         {talkToSeanUrl && (
           <Row
             label={c.talkToSeanLabel}

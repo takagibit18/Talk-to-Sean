@@ -18,3 +18,42 @@ test("homepage CTA opens chat and receives a mocked answer", async ({ page }) =>
   await page.getByRole("button", { name: /Send/i }).click();
   await expect(page.getByText("Sean builds eval-first LLM systems.")).toBeVisible();
 });
+
+test("homepage keeps project-first architecture and linked capability interactions", async ({ page }) => {
+  await page.goto("/");
+
+  const sectionIds = await page.locator("#main-content section[id]").evaluateAll((sections) =>
+    sections.map((section) => section.id),
+  );
+  expect(sectionIds).toEqual([
+    "projects",
+    "skills",
+    "activity",
+    "about",
+    "education",
+    "languages",
+    "publications",
+    "contact",
+  ]);
+
+  await page.getByRole("link", { name: /01 projects/i }).click();
+  await expect(page.locator("#projects")).toBeInViewport();
+
+  const cloud = page.getByRole("group", { name: /core technology ecosystem/i });
+  await cloud.getByRole("button", { name: "FastAPI" }).focus();
+  await expect(page.getByRole("button", { name: /^Backend:/ })).toHaveAttribute("data-active", "true");
+});
+
+test("homepage has no viewport overflow and honors reduced motion on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+  );
+  expect(hasHorizontalOverflow).toBe(false);
+  await expect(page.locator(".fluid-cursor-canvas")).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: /portfolio sections/i })).toBeVisible();
+  await expect(page.getByRole("list", { name: /engineering capability matrix/i })).toBeVisible();
+});

@@ -15,7 +15,7 @@ import TopBar from "@/components/cv/TopBar";
 import { CV_DATA } from "@/lib/cv-data";
 
 vi.mock("next/image", () => ({
-  default: (props: ImgHTMLAttributes<HTMLImageElement>) =>
+  default: ({ priority: _priority, fill: _fill, unoptimized: _unoptimized, ...props }: ImgHTMLAttributes<HTMLImageElement> & { priority?: boolean; fill?: boolean; unoptimized?: boolean }) =>
     // eslint-disable-next-line @next/next/no-img-element
     createElement("img", { ...props, alt: props.alt ?? "" }),
 }));
@@ -185,10 +185,12 @@ describe("homepage visual upgrade", () => {
   });
 
   test("skills icon cloud items render from logo image assets with glyph fallback only", () => {
-    expect(TECH_STACK_ICONS).toHaveLength(12);
-    expect(TECH_STACK_ICONS.every((item) => item.logoSrc?.startsWith("/tech-logos/"))).toBe(
-      true,
-    );
+    expect(TECH_STACK_ICONS).toHaveLength(8);
+    expect(
+      TECH_STACK_ICONS.every(
+        (item) => !item.logoSrc || item.logoSrc.startsWith("/tech-logos/"),
+      ),
+    ).toBe(true);
     expect(TECH_STACK_ICONS.every((item) => item.glyph.length > 0)).toBe(true);
   });
 

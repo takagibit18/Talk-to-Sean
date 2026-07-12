@@ -87,7 +87,13 @@ export function getTelemetryNodeMotion({
   };
 }
 
-export default function SectionTelemetry({ items }: { items: SectionTelemetryItem[] }) {
+export default function SectionTelemetry({
+  items,
+  label = "Page section telemetry",
+}: {
+  items: SectionTelemetryItem[];
+  label?: string;
+}) {
   const reducedMotion = useReducedMotion();
   const lastScrollYRef = useRef(0);
   const directionRef = useRef<ScrollDirection>(0);
@@ -176,7 +182,7 @@ export default function SectionTelemetry({ items }: { items: SectionTelemetryIte
   }
 
   return (
-    <nav className="section-telemetry" aria-label="Page section telemetry">
+    <nav className="section-telemetry" aria-label={label}>
       {items.map((item, index) => {
         const motion = reducedMotion
           ? {

@@ -1,0 +1,36 @@
+[
+  {
+    "index": 0,
+    "id": null,
+    "className": null,
+    "css": {
+      "w": 1440,
+      "h": 900
+    },
+    "backing": {
+      "w": 2880,
+      "h": 1800
+    },
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900
+    },
+    "dataEngine": null,
+    "dataRenderer": null,
+    "style": {
+      "position": "static",
+      "zIndex": "auto",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "mixBlendMode": "normal",
+      "clipPath": "none"
+    },
+    "parent": {
+      "tag": "DIV",
+      "className": "Container",
+      "position": "static"
+    }
+  }
+]
