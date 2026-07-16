@@ -5,8 +5,15 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, FileDown, GitBranch, MessageCircle } from "lucide-react";
 import TextHoverEffect from "@/components/motion/TextHoverEffect";
 import FluidCursor from "@/components/motion/FluidCursor";
+import { useSignalCycle } from "@/components/motion/useSignalCycle";
 import type { CVData } from "@/lib/cv-data";
-import { MOTION_TOKENS, MOTION_TRANSITIONS, STAGGER_VARIANTS } from "@/lib/motion-system";
+import { MOTION_FEATURE_FLAGS } from "@/lib/motion-feature-flags";
+import {
+  MOTION_TOKENS,
+  MOTION_TRANSITIONS,
+  SIGNAL_CYCLE_TIMINGS,
+  STAGGER_VARIANTS,
+} from "@/lib/motion-system";
 
 interface HeroProps {
   data: CVData;
@@ -19,6 +26,16 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
   const agentStepListRef = useRef<HTMLDivElement>(null);
   const agentStepRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [agentLineStyle, setAgentLineStyle] = useState<CSSProperties>({});
+  const traceCycle = useSignalCycle({
+    reducedMotion,
+    autoStart: true,
+    ...SIGNAL_CYCLE_TIMINGS.hero,
+  });
+  const traceState = traceCycle.state;
+  const traceStatusLabel =
+    traceState === "processing"
+      ? data.hero.processingLabel
+      : data.hero.verifiedResultLabel;
 
   useEffect(() => {
     const list = agentStepListRef.current;
@@ -53,7 +70,7 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
 
   return (
     <section className="cv-hero" aria-labelledby="hero-title">
-      <FluidCursor />
+      {MOTION_FEATURE_FLAGS.fluidCursor ? <FluidCursor /> : null}
       <motion.div
         className="cv-hero__layout"
         initial={reducedMotion ? false : "hidden"}
@@ -102,17 +119,21 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
         <motion.div
           variants={childVariants}
           className="cv-hero-trace"
-          data-motion-state="processing"
+          data-motion-state={traceState}
           data-surface-level="2"
+          tabIndex={0}
+          aria-label={data.hero.labTitle}
+          onPointerEnter={() => traceCycle.replay()}
+          onFocus={() => traceCycle.replay()}
         >
           <div className="cv-system-heading">
             <div>
               <span>{data.hero.labTitle}</span>
               <p>{data.hero.labSubtitle}</p>
             </div>
-            <div className="cv-system-state">
+            <div className="cv-system-state" data-state={traceState}>
               <GitBranch size={16} aria-hidden />
-              <span>{data.hero.processingLabel}</span>
+              <span>{traceStatusLabel}</span>
             </div>
           </div>
 
@@ -127,6 +148,7 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
                   agentStepRefs.current[index] = node;
                 }}
                 className="cv-agent-step"
+                data-state={traceState}
                 style={{ "--signal-delay": `${index * MOTION_TOKENS.duration.normal}s` } as CSSProperties}
               >
                 <span className="cv-agent-step-node" aria-hidden />
@@ -139,8 +161,8 @@ export default function Hero({ data, talkToSeanUrl }: HeroProps) {
             ))}
           </div>
 
-          <div className="cv-hero-trace__result">
-            <span className="signal-status signal-status--verified" aria-hidden />
+          <div className="cv-hero-trace__result" data-state={traceState}>
+            <span className={`signal-status signal-status--${traceState}`} aria-hidden />
             <span>{data.hero.verifiedResultLabel}</span>
           </div>
         </motion.div>

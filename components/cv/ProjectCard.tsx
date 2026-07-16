@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { ArrowUpRight, Github, Layers, ListChecks } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArchitectureDiagram, SignalStatus } from "@/components/motion/SignalSystem";
-import { MOTION_TOKENS, REVEAL_VARIANTS } from "@/lib/motion-system";
+import { useSignalCycle } from "@/components/motion/useSignalCycle";
+import type { SignalState } from "@/lib/motion-system";
+import { MOTION_TOKENS, REVEAL_VARIANTS, SIGNAL_CYCLE_TIMINGS } from "@/lib/motion-system";
 import type { GitHubRepo } from "@/lib/github";
 import type { Locale } from "@/lib/locale";
 import type { CVData } from "@/lib/cv-data";
@@ -16,55 +18,95 @@ export default function ProjectCard({
   locale,
   copy,
   index,
+  activeProjectId,
+  onSignalRequest,
+  onSignalSettled,
 }: {
   project: FeaturedProject;
   repo: GitHubRepo | null;
   locale: Locale;
   copy: CVData["projects"];
   index: number;
+  activeProjectId: string | null;
+  onSignalRequest: (projectId: string, source: "viewport" | "interaction") => void;
+  onSignalSettled: (projectId: string) => void;
 }) {
   const reducedMotion = useReducedMotion();
-  const [active, setActive] = useState(false);
-  const activeTimerRef = useRef<number | null>(null);
+  const hasRequestedViewportCycleRef = useRef(false);
+  const cycleWasRunningRef = useRef(false);
+  const previousSignalStateRef = useRef<SignalState>(reducedMotion ? "stable" : "idle");
   const repoUrl = repo?.html_url || project.repoHref;
   const hasSeparateDemo = project.href !== project.repoHref;
-  const stopSignal = useCallback(() => {
-    if (activeTimerRef.current !== null) {
-      window.clearTimeout(activeTimerRef.current);
-      activeTimerRef.current = null;
-    }
-    setActive(false);
-  }, []);
-  const triggerSignal = useCallback(() => {
-    if (activeTimerRef.current !== null) window.clearTimeout(activeTimerRef.current);
-    setActive(true);
-    activeTimerRef.current = window.setTimeout(() => {
-      setActive(false);
-      activeTimerRef.current = null;
-    }, 1600);
-  }, []);
+  const signalCycle = useSignalCycle({
+    reducedMotion,
+    ...SIGNAL_CYCLE_TIMINGS.project,
+  });
+  const { state: signalState, replay, settle } = signalCycle;
+  const ownsSignal = activeProjectId === project.title;
 
-  useEffect(() => () => {
-    if (activeTimerRef.current !== null) window.clearTimeout(activeTimerRef.current);
-  }, []);
+  useEffect(() => {
+    if (reducedMotion) {
+      cycleWasRunningRef.current = false;
+      settle();
+      return;
+    }
+    if (ownsSignal) {
+      if (replay()) cycleWasRunningRef.current = true;
+    } else {
+      cycleWasRunningRef.current = false;
+      settle();
+    }
+  }, [ownsSignal, reducedMotion, replay, settle]);
+
+  useEffect(() => {
+    const previousState = previousSignalStateRef.current;
+    previousSignalStateRef.current = signalState;
+    if (signalState === "processing" || signalState === "verified") {
+      cycleWasRunningRef.current = true;
+    }
+    if (
+      ownsSignal &&
+      cycleWasRunningRef.current &&
+      previousState !== "stable" &&
+      signalState === "stable"
+    ) {
+      cycleWasRunningRef.current = false;
+      onSignalSettled(project.title);
+    }
+  }, [onSignalSettled, ownsSignal, project.title, signalState]);
+
+  const requestSignal = useCallback(
+    (source: "viewport" | "interaction") => {
+      if (reducedMotion) return;
+      if (ownsSignal) {
+        replay();
+        return;
+      }
+      onSignalRequest(project.title, source);
+    },
+    [onSignalRequest, ownsSignal, project.title, reducedMotion, replay],
+  );
+
+  const requestViewportSignal = useCallback(() => {
+    if (hasRequestedViewportCycleRef.current) return;
+    hasRequestedViewportCycleRef.current = true;
+    requestSignal("viewport");
+  }, [requestSignal]);
 
   return (
     <motion.article
       className="cv-project-case"
       data-project-card={project.title}
+      data-motion-state={signalState}
       data-layout={index % 2 === 0 ? "content-first" : "visual-first"}
       initial={reducedMotion ? false : "hidden"}
       whileInView={reducedMotion ? undefined : "show"}
       viewport={{ once: true, amount: 0.16 }}
       variants={REVEAL_VARIANTS}
       transition={{ delay: index * MOTION_TOKENS.stagger }}
-      onViewportEnter={() => !reducedMotion && triggerSignal()}
-      onMouseEnter={triggerSignal}
-      onMouseLeave={stopSignal}
-      onFocusCapture={triggerSignal}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) stopSignal();
-      }}
+      onViewportEnter={requestViewportSignal}
+      onMouseEnter={() => requestSignal("interaction")}
+      onFocusCapture={() => requestSignal("interaction")}
     >
       <div className="cv-project-case__content">
         <header className="cv-project-case__header">
@@ -74,8 +116,8 @@ export default function ProjectCard({
             <p>{project.description[locale] || copy.noDescription}</p>
           </div>
           <SignalStatus
-            state={active ? "processing" : "stable"}
-            label={active ? copy.processingLabel : copy.verifiedLabel}
+            state={signalState}
+            label={signalState === "processing" ? copy.processingLabel : copy.verifiedLabel}
           />
         </header>
 
@@ -125,7 +167,7 @@ export default function ProjectCard({
 
       <div className="cv-project-case__visual" data-surface-level="2">
         <span>{copy.architectureVisualLabel}</span>
-        <ArchitectureDiagram architecture={project.architectureDiagram} locale={locale} active={active} />
+        <ArchitectureDiagram architecture={project.architectureDiagram} locale={locale} state={signalState} />
       </div>
     </motion.article>
   );

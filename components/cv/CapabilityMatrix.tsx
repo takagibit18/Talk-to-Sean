@@ -3,7 +3,8 @@
 import { Activity, Boxes, Database, Network, ServerCog } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { CVCapability, CVData } from "@/lib/cv-data";
-import { MOTION_TOKENS, REVEAL_VARIANTS, STAGGER_VARIANTS } from "@/lib/motion-system";
+import type { SignalState } from "@/lib/motion-system";
+import { REVEAL_VARIANTS, STAGGER_VARIANTS } from "@/lib/motion-system";
 
 const ICONS = {
   "agent-runtime": Network,
@@ -38,17 +39,29 @@ export default function CapabilityMatrix({
   capabilities,
   copy,
   activeTechnologies,
-  onActivate,
+  selectedTechnologies,
+  signalState,
+  onPreview,
+  onPreviewEnd,
+  onToggle,
 }: {
   capabilities: CVCapability[];
   copy: CVData["skillsUi"];
   activeTechnologies: string[];
-  onActivate: (technologies: string[]) => void;
+  selectedTechnologies: string[];
+  signalState: SignalState;
+  onPreview: (technologies: string[]) => void;
+  onPreviewEnd: () => void;
+  onToggle: (technologies: string[]) => void;
 }) {
   const reducedMotion = useReducedMotion();
   const activeCapabilityIds = new Set(
     activeTechnologies.flatMap((technology) => getCapabilitiesForTechnology(technology)),
   );
+  const selectedCapabilityIds = new Set(
+    selectedTechnologies.flatMap((technology) => getCapabilitiesForTechnology(technology)),
+  );
+  const statusLabel = signalState === "processing" ? copy.processingLabel : copy.verifiedLabel;
 
   return (
     <div className="capability-matrix" data-surface-level="0">
@@ -57,9 +70,9 @@ export default function CapabilityMatrix({
           <span>{copy.matrixLabel}</span>
           <p>{copy.matrixDescription}</p>
         </div>
-        <span className="signal-state-label" data-state="verified">
-          <span className="signal-status signal-status--verified" aria-hidden />
-          {copy.verifiedLabel}
+        <span className="signal-state-label" data-state={signalState}>
+          <span className={`signal-status signal-status--${signalState}`} aria-hidden />
+          {statusLabel}
         </span>
       </div>
 
@@ -75,17 +88,27 @@ export default function CapabilityMatrix({
         {capabilities.map((capability) => {
           const Icon = ICONS[capability.id];
           const active = activeCapabilityIds.has(capability.id);
+          const selected = selectedCapabilityIds.has(capability.id);
           const technologies = getCloudTechnologiesForCapability(capability.id);
+          const rowState = active && signalState === "processing"
+            ? "processing"
+            : selected
+              ? "verified"
+              : "stable";
           return (
             <motion.div key={capability.id} role="listitem" variants={REVEAL_VARIANTS}>
               <button
                 type="button"
                 className="capability-row focus-ring"
                 aria-label={`${capability.name}: ${capability.description}`}
+                aria-pressed={selected}
                 data-active={active ? "true" : "false"}
-                onMouseEnter={() => onActivate(technologies)}
-                onFocus={() => onActivate(technologies)}
-                onClick={() => onActivate(technologies)}
+                data-selected={selected ? "true" : "false"}
+                onPointerEnter={() => onPreview(technologies)}
+                onPointerLeave={onPreviewEnd}
+                onFocus={() => onPreview(technologies)}
+                onBlur={onPreviewEnd}
+                onClick={() => onToggle(technologies)}
               >
                 <span className="capability-row__icon"><Icon size={17} aria-hidden /></span>
                 <span className="capability-row__copy">
@@ -98,7 +121,7 @@ export default function CapabilityMatrix({
                   </span>
                 </span>
                 <span className="capability-row__state">
-                  <span className={`signal-status signal-status--${active ? "processing" : "verified"}`} aria-hidden />
+                  <span className={`signal-status signal-status--${rowState}`} aria-hidden />
                   {active ? copy.activeLabel : copy.verifiedLabel}
                 </span>
               </button>

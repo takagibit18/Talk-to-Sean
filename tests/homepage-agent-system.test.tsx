@@ -2,7 +2,7 @@ import { createElement, type ImgHTMLAttributes } from "react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import Hero from "@/components/cv/Hero";
 import Skills, { TECH_STACK_ICONS } from "@/components/cv/Skills";
 import TopBar from "@/components/cv/TopBar";
@@ -16,12 +16,17 @@ vi.mock("next/image", () => ({
     createElement("img", { ...props, alt: props.alt ?? "" }),
 }));
 
+const motionPreference = vi.hoisted(() => ({ reduced: true }));
+
 vi.mock("framer-motion", async () => {
   const actual = await vi.importActual<typeof import("framer-motion")>("framer-motion");
-  return { ...actual, useReducedMotion: () => true };
+  return { ...actual, useReducedMotion: () => motionPreference.reduced };
 });
 
 describe("homepage Agent system architecture", () => {
+  beforeEach(() => {
+    motionPreference.reduced = true;
+  });
   it("renders Projects immediately after Hero and keeps the canonical section order", () => {
     const source = readFileSync(join(process.cwd(), "components/HomeContent.tsx"), "utf8");
     const tokens = [
@@ -149,17 +154,57 @@ describe("homepage Agent system architecture", () => {
     });
   });
 
-  it("returns a project signal from processing to verified after one event cycle", () => {
+  it("completes a project cycle after a 60ms skim instead of stopping on mouse leave", () => {
     vi.useFakeTimers();
+    motionPreference.reduced = false;
     const { container } = render(<RepoGrid repos={[]} locale="en" data={CV_DATA.en} />);
     const card = container.querySelector<HTMLElement>("[data-project-card]");
 
     expect(card).not.toBeNull();
     fireEvent.mouseEnter(card!);
+    expect(card).toHaveAttribute("data-motion-state", "processing");
     expect(within(card!).getByText(CV_DATA.en.projects.processingLabel)).toBeInTheDocument();
 
-    act(() => vi.advanceTimersByTime(1800));
+    act(() => vi.advanceTimersByTime(60));
+    fireEvent.mouseLeave(card!);
+    expect(card).toHaveAttribute("data-motion-state", "processing");
+
+    act(() => vi.advanceTimersByTime(1_090));
+    expect(card).toHaveAttribute("data-motion-state", "verified");
+
+    act(() => vi.advanceTimersByTime(450));
+    expect(card).toHaveAttribute("data-motion-state", "stable");
     expect(within(card!).getByText(CV_DATA.en.projects.verifiedLabel)).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("hands processing ownership to one project at a time", () => {
+    vi.useFakeTimers();
+    motionPreference.reduced = false;
+    const { container } = render(<RepoGrid repos={[]} locale="en" data={CV_DATA.en} />);
+    const cards = [...container.querySelectorAll<HTMLElement>("[data-project-card]")];
+
+    fireEvent.mouseEnter(cards[0]);
+    expect(cards[0]).toHaveAttribute("data-motion-state", "processing");
+    expect(cards[1]).not.toHaveAttribute("data-motion-state", "processing");
+
+    fireEvent.mouseEnter(cards[1]);
+    expect(cards[0]).toHaveAttribute("data-motion-state", "stable");
+    expect(cards[1]).toHaveAttribute("data-motion-state", "processing");
+    expect(container.querySelectorAll('[data-motion-state="processing"]')).toHaveLength(1);
+    vi.useRealTimers();
+  });
+
+  it("keeps project architecture static and timer-free for reduced motion", () => {
+    vi.useFakeTimers();
+    motionPreference.reduced = true;
+    const { container } = render(<RepoGrid repos={[]} locale="en" data={CV_DATA.en} />);
+    const card = container.querySelector<HTMLElement>("[data-project-card]");
+
+    expect(card).toHaveAttribute("data-motion-state", "stable");
+    fireEvent.mouseEnter(card!);
+    expect(card).toHaveAttribute("data-motion-state", "stable");
+    expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
   });
 });

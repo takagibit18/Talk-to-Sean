@@ -484,6 +484,15 @@ html.light .home-shell {
   color: var(--color-cool);
 }
 
+.home-shell .cv-system-state[data-state="idle"] {
+  color: var(--color-text-muted);
+}
+
+.home-shell .cv-system-state[data-state="verified"],
+.home-shell .cv-system-state[data-state="stable"] {
+  color: var(--color-accent-strong);
+}
+
 .home-shell .cv-agent-step-list {
   position: relative;
   display: grid;
@@ -559,7 +568,18 @@ html.light .home-shell {
 .home-shell .cv-agent-link-flow {
   background: linear-gradient(180deg, transparent, var(--color-cool), transparent);
   background-size: 100% 34%;
-  animation: agentTraceRailFlow 3.2s var(--ease-swift) 0.5s 1 both;
+  opacity: 0;
+  animation: none;
+}
+
+.home-shell .cv-hero-trace[data-motion-state="processing"] .cv-agent-link-flow {
+  opacity: 1;
+  animation: agentTraceRailFlow 3.2s var(--ease-swift) 1 both;
+}
+
+.home-shell .cv-hero-trace[data-motion-state="verified"] .cv-agent-link-line,
+.home-shell .cv-hero-trace[data-motion-state="stable"] .cv-agent-link-line {
+  background: linear-gradient(180deg, var(--color-cool), var(--color-accent-strong));
 }
 
 .home-shell .cv-agent-link-dot {
@@ -576,6 +596,34 @@ html.light .home-shell {
   font-size: 0.74rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  opacity: 0.34;
+  transition: opacity var(--dur-fast) var(--ease-swift);
+}
+
+.home-shell .cv-hero-trace__result[data-state="verified"],
+.home-shell .cv-hero-trace__result[data-state="stable"] {
+  opacity: 1;
+}
+
+.home-shell .cv-agent-step::before,
+.home-shell .cv-agent-step-node,
+.home-shell .cv-agent-step-node::after {
+  animation: none;
+}
+
+.home-shell .cv-hero-trace[data-motion-state="processing"] .cv-agent-step::before {
+  animation: agentTraceScan 900ms var(--ease-swift) var(--signal-delay) 1 both;
+}
+
+.home-shell .cv-hero-trace[data-motion-state="processing"] .cv-agent-step-node,
+.home-shell .cv-hero-trace[data-motion-state="processing"] .cv-agent-step-node::after {
+  animation: agentTracePulse 650ms ease-out var(--signal-delay) 1 both;
+}
+
+.home-shell .cv-hero-trace[data-motion-state="verified"] .cv-agent-step-node,
+.home-shell .cv-hero-trace[data-motion-state="stable"] .cv-agent-step-node {
+  border-color: var(--color-accent-strong);
+  background: var(--color-accent-strong);
 }
 
 /* Projects: alternating case-study sections, one architecture focus each. */
@@ -974,9 +1022,11 @@ html.light .home-shell {
 }
 
 .home-shell .icon-cloud {
+  --icon-cloud-anchor-y: -1.4rem;
   position: relative;
   width: min(100%, 42rem);
   min-height: 29rem;
+  touch-action: pan-y;
 }
 
 .home-shell .icon-cloud-canvas,
@@ -993,61 +1043,88 @@ html.light .home-shell {
 
 .home-shell .icon-cloud__node {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 2;
+  display: block;
+  width: 6.5rem;
+  min-height: 4rem;
+  border: 0;
+  border-radius: var(--home-radius-sm);
+  background: transparent;
+  padding: 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  pointer-events: auto;
+  transform-origin: 50% 1.4rem;
+  box-shadow: none;
+  will-change: transform, opacity;
+}
+
+.home-shell .icon-cloud-canvas {
+  pointer-events: none;
+  cursor: default;
+}
+
+.home-shell .icon-cloud__visual {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.38rem;
+  opacity: 1;
+}
+
+.home-shell .icon-cloud__visual-icon {
   display: grid;
   width: 2.8rem;
   height: 2.8rem;
   place-items: center;
-  border: 1px solid transparent;
+  overflow: hidden;
+  border: 1px solid var(--home-rule-strong);
   border-radius: 50%;
-  background: transparent;
-  color: transparent;
-  font-family: var(--font-space-grotesk), sans-serif;
+  background: var(--home-bg-elevated);
+  transition: border-color var(--dur-fast) var(--ease-swift);
+}
+
+.home-shell .icon-cloud__visual-icon img {
+  display: block;
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
+}
+
+.home-shell .icon-cloud__glyph {
+  display: grid;
+  width: 72%;
+  height: 72%;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--icon-color);
+  color: #fff;
   font-size: 0.68rem;
-  font-weight: 650;
-  pointer-events: auto;
-  transform: translate(-50%, -50%);
-  box-shadow: none;
+  font-weight: 700;
 }
 
-.home-shell .icon-cloud__node > span {
-  opacity: 0;
-}
-
-.home-shell .icon-cloud__node::after {
-  position: absolute;
-  top: calc(100% + 0.42rem);
-  left: 50%;
-  content: attr(aria-label);
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0;
-  transform: translateX(-50%);
+.home-shell .icon-cloud__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.home-shell .icon-cloud__node:nth-child(1) { left: 20%; top: 24%; }
-.home-shell .icon-cloud__node:nth-child(2) { left: 50%; top: 13%; }
-.home-shell .icon-cloud__node:nth-child(3) { left: 80%; top: 25%; }
-.home-shell .icon-cloud__node:nth-child(4) { left: 88%; top: 52%; }
-.home-shell .icon-cloud__node:nth-child(5) { left: 76%; top: 79%; }
-.home-shell .icon-cloud__node:nth-child(6) { left: 48%; top: 88%; }
-.home-shell .icon-cloud__node:nth-child(7) { left: 19%; top: 77%; }
-.home-shell .icon-cloud__node:nth-child(8) { left: 10%; top: 49%; }
 
 .home-shell .icon-cloud__node:hover,
 .home-shell .icon-cloud__node:focus-visible,
 .home-shell .icon-cloud__node[data-active="true"] {
-  border-color: var(--color-cool);
-  background: var(--home-bg-elevated);
-  color: var(--color-text-strong);
-  box-shadow: none;
-  transform: translate(-50%, -50%);
+  color: var(--color-cool);
 }
 
-.home-shell .icon-cloud__node[data-active="true"]::after {
-  color: var(--color-cool);
+.home-shell .icon-cloud__node:hover .icon-cloud__visual-icon,
+.home-shell .icon-cloud__node:focus-visible .icon-cloud__visual-icon,
+.home-shell .icon-cloud__node[data-active="true"] .icon-cloud__visual-icon,
+.home-shell .icon-cloud__node[data-selected="true"] .icon-cloud__visual-icon {
+  border-color: var(--color-cool);
 }
 
 .home-shell .cv-heatmap-main .cv-heading-lg {
@@ -1594,12 +1671,17 @@ html.light .home-shell {
   }
 
   .home-shell .icon-cloud__node {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 3rem;
+    min-height: 2.25rem;
     font-size: 0.58rem;
   }
 
-  .home-shell .icon-cloud__node::after {
+  .home-shell .icon-cloud__visual-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .home-shell .icon-cloud__label {
     display: none;
   }
 
