@@ -35,3 +35,17 @@ export const STAGGER_VARIANTS = {
 
 export type SignalState = "idle" | "processing" | "verified" | "stable";
 
+export const SIGNAL_CYCLE_TIMINGS = {
+  hero: {
+    startDelayMs: 500,
+    processingMs: 3_200,
+    verifiedMs: 650,
+  },
+  project: {
+    processingMs: 1_150,
+    verifiedMs: 450,
+  },
+  capability: {
+    exitDelayMs: 260,
+  },
+} as const;

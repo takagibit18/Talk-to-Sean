@@ -15,17 +15,27 @@ type IconCloudProps = {
   label?: string;
   groupLabel?: string;
   activeLabels?: string[];
+  selectedLabels?: string[];
+  onNodePreview?: (label: string) => void;
+  onNodePreviewEnd?: () => void;
+  onNodeToggle?: (label: string) => void;
+  /** Compatibility for callers while the linked interaction state migrates. */
   onNodeActivate?: (label: string) => void;
 };
 
-type SpherePoint = {
+export type IconCloudSpherePoint = {
   x: number;
   y: number;
   z: number;
 };
 
+export type IconCloudRotation = {
+  rotationX: number;
+  rotationY: number;
+};
+
 const DEFAULT_LABEL = "Interactive technology icon cloud";
-const EMPTY_ACTIVE_LABELS: string[] = [];
+const EMPTY_LABELS: string[] = [];
 
 export const ICON_CLOUD_ROTATION_CONFIG = {
   autoRotateY: 0.0059,
@@ -54,7 +64,7 @@ export function getIconCloudPointerDecay(
 }
 
 export function createIconCloudOrbitPoints(
-  anchorPoint: SpherePoint,
+  anchorPoint: IconCloudSpherePoint,
   segments = 96,
   planeAngle = 0,
 ) {
@@ -76,7 +86,7 @@ export function createIconCloudOrbitPoints(
     z: tangentA.z * Math.cos(planeAngle) + tangentB.z * Math.sin(planeAngle),
   };
 
-  return Array.from({ length: segments + 1 }, (_, index): SpherePoint => {
+  return Array.from({ length: segments + 1 }, (_, index): IconCloudSpherePoint => {
     const theta = (Math.PI * 2 * index) / segments;
     return {
       x: anchor.x * Math.cos(theta) + orbitTangent.x * Math.sin(theta),
@@ -86,7 +96,33 @@ export function createIconCloudOrbitPoints(
   });
 }
 
-function crossPoint(a: SpherePoint, b: SpherePoint): SpherePoint {
+export function projectIconCloudPoint(
+  point: IconCloudSpherePoint,
+  rotation: IconCloudRotation,
+  width: number,
+  height: number,
+) {
+  const cosY = Math.cos(rotation.rotationY);
+  const sinY = Math.sin(rotation.rotationY);
+  const cosX = Math.cos(rotation.rotationX);
+  const sinX = Math.sin(rotation.rotationX);
+  const x1 = point.x * cosY - point.z * sinY;
+  const z1 = point.x * sinY + point.z * cosY;
+  const y1 = point.y * cosX - z1 * sinX;
+  const z2 = point.y * sinX + z1 * cosX;
+  const perspective = 2.45;
+  const scale = perspective / (perspective - z2);
+  const radius = Math.min(width, height) * 0.33;
+
+  return {
+    x: width / 2 + x1 * radius * scale,
+    y: height / 2 + y1 * radius * scale,
+    z: z2,
+    scale,
+  };
+}
+
+function crossPoint(a: IconCloudSpherePoint, b: IconCloudSpherePoint): IconCloudSpherePoint {
   return {
     x: a.y * b.z - a.z * b.y,
     y: a.z * b.x - a.x * b.z,
@@ -94,9 +130,8 @@ function crossPoint(a: SpherePoint, b: SpherePoint): SpherePoint {
   };
 }
 
-function normalizePoint(point: SpherePoint): SpherePoint {
+function normalizePoint(point: IconCloudSpherePoint): IconCloudSpherePoint {
   const length = Math.hypot(point.x, point.y, point.z) || 1;
-
   return {
     x: point.x / length,
     y: point.y / length,
@@ -110,12 +145,10 @@ function clampPointer(value: number) {
 
 function createSpherePoints(count: number) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-
-  return Array.from({ length: count }, (_, index): SpherePoint => {
+  return Array.from({ length: count }, (_, index): IconCloudSpherePoint => {
     const y = 1 - (index / Math.max(count - 1, 1)) * 2;
     const radius = Math.sqrt(1 - y * y);
     const theta = goldenAngle * index;
-
     return {
       x: Math.cos(theta) * radius,
       y,
@@ -124,74 +157,75 @@ function createSpherePoints(count: number) {
   });
 }
 
-function roundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-) {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + width - r, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-  ctx.lineTo(x + width, y + height - r);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-  ctx.lineTo(x + r, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
 function cssVar(name: string, fallback: string) {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
-  );
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
-
-type LogoCacheEntry = {
-  image: HTMLImageElement;
-  loaded: boolean;
-  failed: boolean;
-};
 
 export default function IconCloud({
   items,
   label = DEFAULT_LABEL,
   groupLabel = "Core technology ecosystem",
-  activeLabels = EMPTY_ACTIVE_LABELS,
+  activeLabels = EMPTY_LABELS,
+  selectedLabels = EMPTY_LABELS,
+  onNodePreview,
+  onNodePreviewEnd,
+  onNodeToggle,
   onNodeActivate,
 }: IconCloudProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const nodeRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const reducedMotion = useReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion === true);
+  const activeLabelsRef = useRef(activeLabels);
+  const itemsRef = useRef(items);
+  const tickRef = useRef(0);
+  const initializationCountRef = useRef(0);
+  const drawRef = useRef<(() => void) | null>(null);
+  const syncAnimationRef = useRef<(() => void) | null>(null);
   const points = useMemo(() => createSpherePoints(items.length), [items.length]);
 
+  itemsRef.current = items;
+  activeLabelsRef.current = activeLabels;
+  reducedMotionRef.current = reducedMotion === true;
+
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || items.length === 0) {
-      return;
+    const root = rootRef.current;
+    if (root) root.dataset.activeLabel = activeLabels.join(",");
+    drawRef.current?.();
+  }, [activeLabels]);
+
+  useEffect(() => {
+    if (reducedMotion === true) {
+      tickRef.current = 0;
     }
+    syncAnimationRef.current?.();
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const canvas = canvasRef.current;
+    if (!root || !canvas || points.length === 0) return undefined;
 
     let ctx: CanvasRenderingContext2D | null = null;
     try {
       ctx = canvas.getContext("2d");
     } catch {
-      return;
+      return undefined;
     }
+    if (!ctx) return undefined;
 
-    if (!ctx) {
-      return;
-    }
+    initializationCountRef.current += 1;
+    root.dataset.initializationCount = String(initializationCountRef.current);
 
-    let animationFrame = 0;
-    let tick = 0;
+    let mounted = true;
+    let isIntersecting = false;
+    let pageVisible = document.visibilityState === "visible";
+    let animationFrame: number | null = null;
+    let lastFrameTime: number | null = null;
     let width = 320;
     let height = 320;
     let dpr = 1;
-    const logoCache = new Map<string, LogoCacheEntry>();
     const pointer = {
       x: 0,
       y: 0,
@@ -201,18 +235,14 @@ export default function IconCloud({
       leaveFromY: 0,
     };
 
+    const setAnimationState = (state: "running" | "paused" | "reduced") => {
+      root.dataset.animationState = state;
+    };
+
     const getPointerInfluence = (now: number) => {
-      if (reducedMotion) {
-        return { x: 0, y: 0 };
-      }
-
-      if (pointer.active) {
-        return { x: pointer.x, y: pointer.y };
-      }
-
-      if (pointer.leaveStart === 0) {
-        return { x: 0, y: 0 };
-      }
+      if (reducedMotionRef.current) return { x: 0, y: 0 };
+      if (pointer.active) return { x: pointer.x, y: pointer.y };
+      if (pointer.leaveStart === 0) return { x: 0, y: 0 };
 
       const decay = getIconCloudPointerDecay(now - pointer.leaveStart);
       if (decay <= 0) {
@@ -221,147 +251,72 @@ export default function IconCloud({
         pointer.y = 0;
         return { x: 0, y: 0 };
       }
-
       return {
         x: pointer.leaveFromX * decay,
         y: pointer.leaveFromY * decay,
       };
     };
 
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      width = Math.max(260, rect.width);
-      height = Math.max(260, rect.height || rect.width);
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      draw();
-    };
-
-    const getLogo = (src: string) => logoCache.get(src);
-
-    const preloadLogos = () => {
-      const uniqueSources = Array.from(
-        new Set(items.map((item) => item.logoSrc).filter(Boolean)),
-      ) as string[];
-
-      uniqueSources.forEach((src) => {
-        if (logoCache.has(src)) {
-          return;
-        }
-
-        const image = new Image();
-        const entry: LogoCacheEntry = {
-          image,
-          loaded: false,
-          failed: false,
-        };
-
-        image.onload = () => {
-          entry.loaded = true;
-          draw();
-        };
-        image.onerror = () => {
-          entry.failed = true;
-          draw();
-        };
-        image.decoding = "async";
-        image.src = src;
-        if (image.complete && image.naturalWidth > 0) {
-          entry.loaded = true;
-          draw();
-        }
-        logoCache.set(src, entry);
-      });
-    };
-
-    const getRotation = (pointerInfluence: { x: number; y: number }) => {
-      const rotationY =
-        tick * ICON_CLOUD_ROTATION_CONFIG.autoRotateY +
-        pointerInfluence.x * ICON_CLOUD_ROTATION_CONFIG.pointerRotateY;
-      const rotationX =
-        tick * ICON_CLOUD_ROTATION_CONFIG.autoRotateX -
-        pointerInfluence.y * ICON_CLOUD_ROTATION_CONFIG.pointerRotateX;
-
-      return { rotationX, rotationY };
-    };
-
-    const projectPoint = (
-      point: SpherePoint,
-      rotation: { rotationX: number; rotationY: number },
-    ) => {
-      const { rotationX, rotationY } = rotation;
-      const cosY = Math.cos(rotationY);
-      const sinY = Math.sin(rotationY);
-      const cosX = Math.cos(rotationX);
-      const sinX = Math.sin(rotationX);
-      const x1 = point.x * cosY - point.z * sinY;
-      const z1 = point.x * sinY + point.z * cosY;
-      const y1 = point.y * cosX - z1 * sinX;
-      const z2 = point.y * sinX + z1 * cosX;
-      const perspective = 2.45;
-      const scale = perspective / (perspective - z2);
-      const radius = Math.min(width, height) * 0.33;
-
+    const getRotation = (now: number): IconCloudRotation => {
+      const influence = getPointerInfluence(now);
       return {
-        x: width / 2 + x1 * radius * scale,
-        y: height / 2 + y1 * radius * scale,
-        z: z2,
-        scale,
+        rotationY:
+          tickRef.current * ICON_CLOUD_ROTATION_CONFIG.autoRotateY +
+          influence.x * ICON_CLOUD_ROTATION_CONFIG.pointerRotateY,
+        rotationX:
+          tickRef.current * ICON_CLOUD_ROTATION_CONFIG.autoRotateX -
+          influence.y * ICON_CLOUD_ROTATION_CONFIG.pointerRotateX,
       };
     };
 
-    const project = (
-      point: SpherePoint,
-      index: number,
-      rotation: { rotationX: number; rotationY: number },
-    ) => ({
-      item: items[index],
-      ...projectPoint(point, rotation),
-    });
+    const updateDomNodes = (rotation: IconCloudRotation) => {
+      const active = activeLabelsRef.current;
+      points.forEach((point, index) => {
+        const node = nodeRefs.current[index];
+        const item = itemsRef.current[index];
+        if (!node || !item) return;
+
+        const projected = projectIconCloudPoint(point, rotation, width, height);
+        const depth = (projected.z + 1) / 2;
+        const isActive = active.includes(item.label);
+        const opacity =
+          (0.34 + depth * 0.42) * (active.length > 0 && !isActive ? 0.68 : 1);
+        const visualScale = Math.max(0.78, Math.min(1.1, 0.72 + projected.scale * 0.22));
+
+        node.style.transform =
+          `translate3d(${projected.x.toFixed(2)}px, ${projected.y.toFixed(2)}px, 0) ` +
+          `translate(-50%, var(--icon-cloud-anchor-y, -1.4rem)) scale(${visualScale.toFixed(3)})`;
+        node.style.opacity = opacity.toFixed(3);
+        node.style.zIndex = String(2 + Math.round(depth * 100));
+        node.dataset.depth = projected.z.toFixed(3);
+      });
+    };
 
     const drawOrbit = (
-      point: SpherePoint,
-      rotation: { rotationX: number; rotationY: number },
+      point: IconCloudSpherePoint,
+      rotation: IconCloudRotation,
       alpha: number,
       planeAngle: number,
     ) => {
-      if (!ctx) {
-        return;
-      }
-
+      if (!ctx) return;
       const orbit = createIconCloudOrbitPoints(point, 96, planeAngle);
-      const projectedOrbit = orbit.map((orbitPoint) => projectPoint(orbitPoint, rotation));
-
       ctx.beginPath();
-      projectedOrbit.forEach((orbitPoint, index) => {
-        if (index === 0) {
-          ctx.moveTo(orbitPoint.x, orbitPoint.y);
-          return;
-        }
-
-        ctx.lineTo(orbitPoint.x, orbitPoint.y);
+      orbit.forEach((orbitPoint, index) => {
+        const projected = projectIconCloudPoint(orbitPoint, rotation, width, height);
+        if (index === 0) ctx.moveTo(projected.x, projected.y);
+        else ctx.lineTo(projected.x, projected.y);
       });
-
       ctx.globalAlpha = alpha;
       ctx.lineWidth = ICON_CLOUD_ORBIT_CONFIG.lineWidth;
       ctx.stroke();
     };
 
-    function draw(now = performance.now()) {
-      if (!ctx) {
-        return;
-      }
-
-      const bg = cssVar("--color-bg-elevated", "#17140f");
+    const draw = (now = performance.now()) => {
+      if (!ctx) return;
       const border = cssVar("--color-border", "#2f2a22");
       const accent = cssVar("--color-accent-strong", "#e1bd68");
       const cool = cssVar("--color-cool", "#7ec5d6");
-      const pointerInfluence = getPointerInfluence(now);
-      const rotation = getRotation(pointerInfluence);
-      const cloudItems = points
-        .map((point, index) => project(point, index, rotation))
-        .sort((a, b) => a.z - b.z);
+      const rotation = getRotation(now);
 
       ctx.save();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -373,108 +328,91 @@ export default function IconCloud({
         .filter((_, index) => index % 3 === 0)
         .slice(0, ICON_CLOUD_VISIBLE_ORBIT_COUNT)
         .forEach((point, index) => {
-        const projected = projectPoint(point, rotation);
-        const depth = (projected.z + 1) / 2;
-        const depthAlpha =
-          ICON_CLOUD_ORBIT_CONFIG.backAlpha +
-          depth * (ICON_CLOUD_ORBIT_CONFIG.frontAlpha - ICON_CLOUD_ORBIT_CONFIG.backAlpha);
-        ctx.strokeStyle = index % 3 === 0 ? accent : index % 3 === 1 ? cool : border;
-        drawOrbit(
-          point,
-          rotation,
-          index % 2 === 0 ? depthAlpha : depthAlpha * 0.72,
-          index * 0.73,
-        );
+          const projected = projectIconCloudPoint(point, rotation, width, height);
+          const depth = (projected.z + 1) / 2;
+          const depthAlpha =
+            ICON_CLOUD_ORBIT_CONFIG.backAlpha +
+            depth * (ICON_CLOUD_ORBIT_CONFIG.frontAlpha - ICON_CLOUD_ORBIT_CONFIG.backAlpha);
+          ctx!.strokeStyle = index % 3 === 0 ? accent : index % 3 === 1 ? cool : border;
+          drawOrbit(
+            point,
+            rotation,
+            index % 2 === 0 ? depthAlpha : depthAlpha * 0.72,
+            index * 0.73,
+          );
         });
 
-      cloudItems.forEach(({ item, x, y, z, scale }) => {
-        const isActive = activeLabels.includes(item.label);
-        const logo = item.logoSrc ? getLogo(item.logoSrc) : undefined;
-        const logoAspect =
-          logo?.loaded && logo.image.naturalHeight > 0
-            ? logo.image.naturalWidth / logo.image.naturalHeight
-            : 1;
-        const hasLogo = Boolean(logo?.loaded && !logo.failed);
-        const size = Math.max(30, Math.min(48, 26 * scale));
-        const alpha = (0.34 + ((z + 1) / 2) * 0.42) * (activeLabels.length && !isActive ? 0.68 : 1);
-        const chipWidth = hasLogo
-          ? Math.min(96, Math.max(size, size * Math.min(logoAspect, 1.95) * 0.92))
-          : size;
-        const chipHeight = size;
-        const chipX = x - chipWidth / 2;
-        const chipY = y - chipHeight / 2;
-
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = bg;
-        roundedRect(ctx, chipX, chipY, chipWidth, chipHeight, chipHeight / 2);
-        ctx.fill();
-
-        ctx.strokeStyle = isActive ? item.color : z > 0.25 ? cool : border;
-        ctx.globalAlpha = isActive ? Math.min(1, alpha + 0.24) : alpha * 0.58;
-        ctx.lineWidth = 1.25;
-        ctx.stroke();
-
-        if (hasLogo && logo) {
-          const plateSize = chipHeight * 0.76;
-          const plateX = x - plateSize / 2;
-          const plateY = y - plateSize / 2;
-          ctx.globalAlpha = isActive ? 0.96 : alpha * 0.72;
-          ctx.fillStyle = isActive ? "rgba(255, 250, 242, 0.96)" : "rgba(224, 220, 210, 0.68)";
-          roundedRect(ctx, plateX, plateY, plateSize, plateSize, plateSize * 0.28);
-          ctx.fill();
-
-          const logoMaxWidth = chipWidth * 0.72;
-          const logoMaxHeight = chipHeight * 0.68;
-          const logoScale = Math.min(
-            logoMaxWidth / logo.image.naturalWidth,
-            logoMaxHeight / logo.image.naturalHeight,
-          );
-          const logoWidth = logo.image.naturalWidth * logoScale;
-          const logoHeight = logo.image.naturalHeight * logoScale;
-
-          ctx.globalAlpha = isActive ? 1 : alpha * 0.72;
-          ctx.drawImage(
-            logo.image,
-            x - logoWidth / 2,
-            y - logoHeight / 2,
-            logoWidth,
-            logoHeight,
-          );
-          return;
-        }
-
-        ctx.globalAlpha = isActive ? 1 : alpha * 0.72;
-        ctx.fillStyle = isActive ? item.color : cool;
-        ctx.beginPath();
-        ctx.arc(x, y, chipHeight * 0.34, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `700 ${Math.max(9, chipHeight * 0.3)}px var(--font-space-grotesk), sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(item.glyph, x, y + 0.5);
-      });
-
       ctx.restore();
-    }
+      updateDomNodes(rotation);
+      root.dataset.rotationTick = tickRef.current.toFixed(2);
+      root.dataset.activeLabel = activeLabelsRef.current.join(",");
+    };
+    drawRef.current = () => draw();
 
-    const animate = () => {
-      if (!reducedMotion) {
-        tick += ICON_CLOUD_ROTATION_CONFIG.tickIncrement;
-      }
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      width = Math.max(260, rect.width);
+      height = Math.max(260, rect.height || rect.width);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
       draw();
-      if (!reducedMotion) {
-        animationFrame = window.requestAnimationFrame(animate);
-      }
     };
 
-    const handlePointerMove = (event: PointerEvent) => {
-      if (reducedMotion) {
+    const shouldRun = () =>
+      mounted && isIntersecting && pageVisible && !reducedMotionRef.current;
+
+    const cancelFrame = () => {
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+      lastFrameTime = null;
+    };
+
+    const animate = (now: number) => {
+      animationFrame = null;
+      if (!shouldRun()) return;
+      if (lastFrameTime !== null) {
+        const normalizedDelta = Math.min((now - lastFrameTime) / (1000 / 60), 3);
+        tickRef.current += ICON_CLOUD_ROTATION_CONFIG.tickIncrement * normalizedDelta;
+      }
+      lastFrameTime = now;
+      draw(now);
+      animationFrame = window.requestAnimationFrame(animate);
+    };
+
+    const syncAnimation = () => {
+      if (reducedMotionRef.current) {
+        tickRef.current = 0;
+        pointer.x = 0;
+        pointer.y = 0;
+        pointer.active = false;
+        pointer.leaveStart = 0;
+        cancelFrame();
+        draw();
+        setAnimationState("reduced");
         return;
       }
 
-      const rect = canvas.getBoundingClientRect();
+      if (!shouldRun()) {
+        cancelFrame();
+        draw();
+        setAnimationState("paused");
+        return;
+      }
+
+      setAnimationState("running");
+      if (animationFrame === null) {
+        animationFrame = window.requestAnimationFrame(animate);
+      }
+    };
+    syncAnimationRef.current = syncAnimation;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (reducedMotionRef.current) return;
+      const rect = root.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
       pointer.x = clampPointer((event.clientX - rect.left - rect.width / 2) / rect.width);
       pointer.y = clampPointer((event.clientY - rect.top - rect.height / 2) / rect.height);
       pointer.active = true;
@@ -482,60 +420,106 @@ export default function IconCloud({
     };
 
     const handlePointerLeave = () => {
-      if (reducedMotion) {
-        return;
-      }
-
+      if (reducedMotionRef.current) return;
       pointer.leaveFromX = pointer.x;
       pointer.leaveFromY = pointer.y;
       pointer.leaveStart = performance.now();
       pointer.active = false;
     };
 
-    canvas.addEventListener("pointermove", handlePointerMove, { passive: true });
-    canvas.addEventListener("pointerleave", handlePointerLeave);
+    const handleVisibilityChange = () => {
+      pageVisible = document.visibilityState === "visible";
+      syncAnimation();
+    };
+
+    const intersectionObserver = new IntersectionObserver(
+      ([entry]) => {
+        isIntersecting = Boolean(entry?.isIntersecting);
+        syncAnimation();
+      },
+      { threshold: 0.05 },
+    );
+    intersectionObserver.observe(root);
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resize);
+    resizeObserver?.observe(root);
+    root.addEventListener("pointermove", handlePointerMove, { passive: true });
+    root.addEventListener("pointerleave", handlePointerLeave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("resize", resize);
 
-    const observer =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resize);
-    observer?.observe(canvas);
-
-    preloadLogos();
     resize();
-    animate();
+    syncAnimation();
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
-      logoCache.forEach(({ image }) => {
-        image.onload = null;
-        image.onerror = null;
-      });
-      observer?.disconnect();
+      mounted = false;
+      cancelFrame();
+      drawRef.current = null;
+      syncAnimationRef.current = null;
+      intersectionObserver.disconnect();
+      resizeObserver?.disconnect();
+      root.removeEventListener("pointermove", handlePointerMove);
+      root.removeEventListener("pointerleave", handlePointerLeave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("pointermove", handlePointerMove);
-      canvas.removeEventListener("pointerleave", handlePointerLeave);
     };
-  }, [items, points, reducedMotion, activeLabels]);
+  }, [points]);
+
+  const previewNode = (itemLabel: string) => {
+    if (onNodePreview) onNodePreview(itemLabel);
+    else onNodeActivate?.(itemLabel);
+  };
+  const toggleNode = (itemLabel: string) => {
+    if (onNodeToggle) onNodeToggle(itemLabel);
+    else onNodeActivate?.(itemLabel);
+  };
 
   return (
-    <div className="icon-cloud" role="group" aria-label={groupLabel}>
+    <div
+      ref={rootRef}
+      className="icon-cloud"
+      role="group"
+      aria-label={groupLabel}
+      data-animation-state={reducedMotion ? "reduced" : "paused"}
+      data-initialization-count="0"
+      data-rotation-tick="0.00"
+      data-active-label={activeLabels.join(",")}
+    >
       <canvas ref={canvasRef} role="img" aria-label={label} className="icon-cloud-canvas" />
       <div className="icon-cloud__nodes">
         {items.map((item, index) => {
           const active = activeLabels.includes(item.label);
+          const selected = selectedLabels.includes(item.label);
           return (
             <button
               key={item.label}
+              ref={(node) => {
+                nodeRefs.current[index] = node;
+              }}
               type="button"
               className="icon-cloud__node focus-ring"
               aria-label={item.label}
+              aria-pressed={selected}
               data-active={active ? "true" : "false"}
-              style={{ "--icon-index": index } as React.CSSProperties}
-              onMouseEnter={() => onNodeActivate?.(item.label)}
-              onFocus={() => onNodeActivate?.(item.label)}
-              onClick={() => onNodeActivate?.(item.label)}
+              data-selected={selected ? "true" : "false"}
+              onPointerEnter={() => previewNode(item.label)}
+              onPointerLeave={onNodePreviewEnd}
+              onFocus={() => previewNode(item.label)}
+              onBlur={onNodePreviewEnd}
+              onClick={() => toggleNode(item.label)}
             >
-              <span aria-hidden>{item.glyph}</span>
+              <span className="icon-cloud__visual" aria-hidden>
+                <span className="icon-cloud__visual-icon" style={{ "--icon-color": item.color } as React.CSSProperties}>
+                  {item.logoSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.logoSrc} alt="" draggable={false} />
+                  ) : (
+                    <span className="icon-cloud__glyph">{item.glyph}</span>
+                  )}
+                </span>
+                <span className="icon-cloud__label">{item.label}</span>
+              </span>
             </button>
           );
         })}

@@ -578,7 +578,7 @@ html.light::view-transition-new(root) {
     border-radius: 999px;
     background: var(--color-success);
     box-shadow: 0 0 0 4px rgba(127, 194, 107, 0.18);
-    animation: pulseDot 2.4s ease-in-out infinite;
+    animation: pulseDot 2.4s ease-in-out 1 both;
   }
 
   .cv-cta {
@@ -3422,8 +3422,6 @@ html.light::view-transition-new(root) {
   .cv-project-card:focus-within,
   .capability-row:hover,
   .capability-row:focus-visible,
-  .icon-cloud__node:hover,
-  .icon-cloud__node:focus-visible,
   .cv-chip:hover,
   .cv-chip:focus-visible {
     transform: none !important;

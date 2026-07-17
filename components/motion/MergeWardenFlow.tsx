@@ -2,13 +2,7 @@
 
 import Image from "next/image";
 import { useId, useState } from "react";
-import {
-  motion,
-  useAnimationFrame,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ChartNoAxesColumnIncreasing,
   FileStack,
@@ -19,13 +13,11 @@ import {
   Wrench,
   Workflow,
 } from "lucide-react";
-import type { MotionValue } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { Locale } from "@/lib/locale";
 
 const FLOW_EASE = [0.22, 0.68, 0.2, 1] as const;
-const ORBIT_SECONDS = 34;
 const ORBIT_ICONS = [
   Wrench,
   Workflow,
@@ -131,28 +123,8 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
   const reducedMotion = useReducedMotion();
   const copy = COPY[locale];
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isOrbitPaused, setIsOrbitPaused] = useState(false);
   const activeHighlight = copy.highlights[activeIndex];
   const orbitStep = 360 / copy.highlights.length;
-  const orbitPaused = reducedMotion || isOrbitPaused;
-  const orbitAngle = useMotionValue(0);
-  const orbitTransform = useTransform(
-    orbitAngle,
-    (value) => `translate(-50%, -50%) rotate(${value}deg)`,
-  );
-  const chipCounterTransform = useTransform(
-    orbitAngle,
-    (value) => `rotate(${-value}deg) rotate(var(--orbit-offset-negative))`,
-  );
-
-  useAnimationFrame((_, delta) => {
-    if (orbitPaused) {
-      return;
-    }
-
-    const nextAngle = orbitAngle.get() + (delta / 1000) * (360 / ORBIT_SECONDS);
-    orbitAngle.set(nextAngle % 360);
-  });
 
   return (
     <div
@@ -162,22 +134,12 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
       data-testid="mergewarden-flow"
     >
       <div className="mergewarden-flow__rail mergewarden-flow__rail--left" aria-hidden>
-        {["#123d45", "#35aeb7", "#7fc8cf"].map((color, index) => (
+        {["#123d45", "#35aeb7", "#7fc8cf"].map((color) => (
           <motion.span
             key={color}
             className="mergewarden-flow__packet"
             style={{ "--packet-color": color } as CSSProperties}
-            animate={
-              reducedMotion
-                ? { opacity: 0.72, x: 0 }
-                : { opacity: [0.22, 1, 0.26], x: [0, 11, 0] }
-            }
-            transition={{
-              duration: 2.8,
-              delay: index * 0.32,
-              repeat: reducedMotion ? 0 : Infinity,
-              ease: FLOW_EASE,
-            }}
+            animate={{ opacity: 0.72, x: 0 }}
           />
         ))}
       </div>
@@ -243,63 +205,28 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
           d="M 84 132 C 158 126, 224 98, 304 112"
           stroke="url(#mergewarden-flow-wave)"
           initial={false}
-          animate={
-            reducedMotion
-              ? { opacity: 0 }
-              : { strokeDashoffset: [260, -160], opacity: [0.12, 1, 0.16] }
-          }
-          transition={{ duration: 3.2, repeat: reducedMotion ? 0 : Infinity, ease: "easeInOut" }}
+          animate={{ opacity: 0 }}
         />
         <motion.path
           className="mergewarden-flow__connector-wave mergewarden-flow__connector-wave--primary"
           d="M 396 112 C 476 98, 542 126, 616 132"
           stroke="url(#mergewarden-flow-wave)"
           initial={false}
-          animate={
-            reducedMotion
-              ? { opacity: 0 }
-              : { strokeDashoffset: [260, -160], opacity: [0.12, 1, 0.16] }
-          }
-          transition={{
-            duration: 3.2,
-            delay: reducedMotion ? 0 : 0.8,
-            repeat: reducedMotion ? 0 : Infinity,
-            ease: "easeInOut",
-          }}
+          animate={{ opacity: 0 }}
         />
         <motion.path
           className="mergewarden-flow__connector-wave mergewarden-flow__connector-wave--secondary"
           d="M 84 132 C 158 126, 224 98, 304 112"
           stroke="url(#mergewarden-flow-wave)"
           initial={false}
-          animate={
-            reducedMotion
-              ? { opacity: 0 }
-              : { strokeDashoffset: [120, -250], opacity: [0, 0.62, 0] }
-          }
-          transition={{
-            duration: 4.85,
-            delay: reducedMotion ? 0 : 1.35,
-            repeat: reducedMotion ? 0 : Infinity,
-            ease: "easeInOut",
-          }}
+          animate={{ opacity: 0 }}
         />
         <motion.path
           className="mergewarden-flow__connector-wave mergewarden-flow__connector-wave--secondary"
           d="M 396 112 C 476 98, 542 126, 616 132"
           stroke="url(#mergewarden-flow-wave)"
           initial={false}
-          animate={
-            reducedMotion
-              ? { opacity: 0 }
-              : { strokeDashoffset: [120, -250], opacity: [0, 0.62, 0] }
-          }
-          transition={{
-            duration: 4.85,
-            delay: reducedMotion ? 0 : 2.15,
-            repeat: reducedMotion ? 0 : Infinity,
-            ease: "easeInOut",
-          }}
+          animate={{ opacity: 0 }}
         />
         {[
           { cx: [84, 156, 235, 304], cy: [132, 126, 99, 112], delay: 0 },
@@ -315,22 +242,7 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
             r="4.2"
             fill="url(#mergewarden-flow-particle)"
             initial={false}
-            animate={
-              reducedMotion
-                ? { opacity: 0 }
-                : {
-                    cx: particle.cx,
-                    cy: particle.cy,
-                    opacity: [0, 1, 0.82, 0],
-                    scale: [0.62, 1.1, 0.92, 0.58],
-                  }
-            }
-            transition={{
-              duration: 3.15,
-              delay: reducedMotion ? 0 : particle.delay,
-              repeat: reducedMotion ? 0 : Infinity,
-              ease: FLOW_EASE,
-            }}
+            animate={{ opacity: 0 }}
           />
         ))}
         {[
@@ -344,32 +256,16 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
             cy={pulse.cy}
             r="8"
             initial={false}
-            animate={
-              reducedMotion
-                ? { opacity: 0 }
-                : { opacity: [0, 0.72, 0], r: [5, 18, 26] }
-            }
-            transition={{
-              duration: 1.45,
-              delay: reducedMotion ? 0 : pulse.delay,
-              repeat: reducedMotion ? 0 : Infinity,
-              ease: "easeOut",
-            }}
+            animate={{ opacity: 0 }}
           />
         ))}
       </svg>
 
       <div className="mergewarden-flow__hub">
         <motion.div
-          className={`mergewarden-flow__orbit${orbitPaused ? " is-paused" : ""}`}
+          className="mergewarden-flow__orbit"
           aria-label={copy.orbitHint}
-          style={{ transform: orbitTransform }}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-              setIsOrbitPaused(false);
-            }
-          }}
-          onMouseLeave={() => setIsOrbitPaused(false)}
+          style={{ transform: "translate(-50%, -50%)" }}
         >
           <span className="mergewarden-flow__orbit-track" aria-hidden />
           {copy.highlights.map((item, index) => (
@@ -381,10 +277,8 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
               orbitStep={orbitStep}
               detailId={detailId}
               isActive={activeIndex === index}
-              transform={chipCounterTransform}
               onActivate={() => {
                 setActiveIndex(index);
-                setIsOrbitPaused(true);
               }}
             />
           ))}
@@ -393,8 +287,7 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
         <motion.div
           className="mergewarden-flow__logo"
           style={{ x: "-50%", y: "-50%" }}
-          animate={reducedMotion ? { scale: 1 } : { scale: [1, 1.015, 1] }}
-          transition={{ duration: 3.6, repeat: reducedMotion ? 0 : Infinity, ease: FLOW_EASE }}
+          animate={{ scale: 1 }}
         >
           <Image
             src="/mergewarden-logo-mark.png"
@@ -437,22 +330,12 @@ export default function MergeWardenFlow({ locale }: { locale: Locale }) {
       />
 
       <div className="mergewarden-flow__rail mergewarden-flow__rail--right" aria-hidden>
-        {["#35aeb7", "#123d45", "#7fc8cf"].map((color, index) => (
+        {["#35aeb7", "#123d45", "#7fc8cf"].map((color) => (
           <motion.span
             key={color}
             className="mergewarden-flow__packet mergewarden-flow__packet--safe"
             style={{ "--packet-color": color } as CSSProperties}
-            animate={
-              reducedMotion
-                ? { opacity: 0.72, x: 0 }
-                : { opacity: [0.22, 1, 0.26], x: [0, 13, 0] }
-            }
-            transition={{
-              duration: 2.8,
-              delay: 1.1 + index * 0.32,
-              repeat: reducedMotion ? 0 : Infinity,
-              ease: FLOW_EASE,
-            }}
+            animate={{ opacity: 0.72, x: 0 }}
           />
         ))}
       </div>
@@ -467,7 +350,6 @@ function OrbitChip({
   orbitStep,
   detailId,
   isActive,
-  transform,
   onActivate,
 }: {
   item: OrbitHighlight;
@@ -476,7 +358,6 @@ function OrbitChip({
   orbitStep: number;
   detailId: string;
   isActive: boolean;
-  transform: MotionValue<string>;
   onActivate: () => void;
 }) {
   return (
@@ -492,7 +373,7 @@ function OrbitChip({
       <motion.button
         type="button"
         className="mergewarden-flow__orbit-chip"
-        style={{ transform }}
+        style={{ transform: "rotate(var(--orbit-offset-negative))" }}
         aria-describedby={detailId}
         aria-pressed={isActive}
         onClick={onActivate}
